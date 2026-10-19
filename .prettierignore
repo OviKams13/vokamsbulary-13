@@ -1,0 +1,22 @@
+# Build output and dependencies
+.next/
+out/
+build/
+coverage/
+node_modules/
+package-lock.json
+next-env.d.ts
+
+# Local working files (never committed, edited by hand)
+a.*
+a.features/
+a.explanations/
+a.photo/
+
+# Binary / generated assets
+assets/
+public/
+*.ico
+
+# Drizzle migrations are generated and never hand-edited
+drizzle/
