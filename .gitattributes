@@ -1,0 +1,7 @@
+# Keep LF in the repo and in the working tree on every OS (matches Prettier "endOfLine": "lf").
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.jpg binary
+*.webp binary
