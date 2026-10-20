@@ -1,0 +1,43 @@
+# CI (2.12): lint, typecheck, format check and production build on every PR.
+# The job name "Lint, typecheck, build" is the status check that `main`'s
+# branch protection requires.
+name: CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+# A new push to the same PR cancels the run that is still going.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint, typecheck, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm run typecheck
+
+      - run: npm run format:check
+
+      # No secret is needed: env validation runs when the server starts,
+      # not during `next build`.
+      - run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
