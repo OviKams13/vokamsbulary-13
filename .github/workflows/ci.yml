@@ -36,8 +36,14 @@ jobs:
 
       - run: npm run format:check
 
-      # No secret is needed: env validation runs when the server starts,
-      # not during `next build`.
+      # `next build` loads every server module to collect page config, and
+      # `src/lib/env.ts` validates when it is loaded. These placeholders only
+      # satisfy the schema: nothing connects to a database or calls an API
+      # during the build. They are not secrets.
       - run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: 1
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+          ANTHROPIC_API_KEY: ci-placeholder
+          ACCESS_CODE: ci-placeholder
+          ACCESS_COOKIE_SECRET: ci-placeholder-ci-placeholder-ci-placeholder

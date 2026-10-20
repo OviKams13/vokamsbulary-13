@@ -14,7 +14,7 @@ import { z } from "zod";
  * - ANTHROPIC_API_KEY      → 2.10 (Claude client)
  * - BLOB_STORE_ID (Vercel Production, OIDC) or BLOB_READ_WRITE_TOKEN (local,
  *   Preview) → with the upload code
- * - ACCESS_CODE, ACCESS_COOKIE_SECRET → Phase 3 (access code)
+ * - ACCESS_CODE, ACCESS_COOKIE_SECRET → 3.1 (access code)
  *
  * DATABASE_URL_UNPOOLED is only read by drizzle-kit (`drizzle.config.ts`), never
  * by the running app, so it is not part of this schema.
@@ -26,6 +26,10 @@ const serverSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
   ANTHROPIC_API_KEY: z.string().min(1),
+  /** The code typed once per device (F1). Any length (X-06). */
+  ACCESS_CODE: z.string().min(1),
+  /** HMAC key that signs the access cookie. 32+ characters of random data. */
+  ACCESS_COOKIE_SECRET: z.string().min(32),
 });
 
 export type ServerEnv = z.infer<typeof serverSchema>;
