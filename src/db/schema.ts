@@ -169,7 +169,8 @@ export const aiCalls = pgTable(
 // Derived data (ERD §5.1): TOTW number and position of every published post
 // ---------------------------------------------------------------------------
 
-export const TOTW_SIZE = 15;
+// Relative path: drizzle-kit loads this file without the `@/` alias.
+export { TOTW_SIZE } from "../lib/totw";
 
 /**
  * `post_ranks`: rank, TOTW number and position (1–15) of each published post,
