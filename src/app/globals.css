@@ -84,3 +84,37 @@
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 }
+
+/* Mobile drawer (src/components/shell/mobile-drawer.tsx): slide in, and no page scroll behind it. */
+@layer base {
+  html:has(dialog.drawer[open]) {
+    overflow: hidden;
+  }
+}
+
+dialog.drawer[open] {
+  animation: drawer-in 180ms ease-out;
+}
+
+dialog.drawer[open]::backdrop {
+  animation: drawer-fade 180ms ease-out;
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes drawer-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.drawer[open],
+  dialog.drawer[open]::backdrop {
+    animation: none;
+  }
+}

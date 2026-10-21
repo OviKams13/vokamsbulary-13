@@ -1,6 +1,5 @@
 import { TotwBadge } from "@/components/totw-badge";
-
-export const POSTS_PER_TOTW = 15;
+import { TOTW_SIZE as POSTS_PER_TOTW } from "@/lib/totw";
 
 type TotwHeaderProps = {
   number: number;
