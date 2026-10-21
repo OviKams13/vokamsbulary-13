@@ -26,11 +26,12 @@ import {
   type NewPost,
   type NewTerm,
 } from "@/db";
+import { SEED_IMAGE_PREFIX } from "@/lib/seed";
 import { THEMES } from "@/themes";
 
 import { SEED_POSTS } from "./seed-data";
 
-const SEED_PREFIX = "seed/";
+const SEED_PREFIX = SEED_IMAGE_PREFIX;
 const SEED_MODEL = "seed";
 const HOUR = 60 * 60 * 1000;
 

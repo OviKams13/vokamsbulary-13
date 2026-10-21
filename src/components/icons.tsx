@@ -65,6 +65,31 @@ export function ListIcon(props: IconProps) {
   );
 }
 
+export function ArrowLeftIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M19 12H5M11 6l-6 6 6 6" />
+    </Icon>
+  );
+}
+
+/** "⋯" menu button. */
+export function MoreIcon(props: IconProps) {
+  return (
+    <Icon {...props} strokeWidth="3">
+      <path d="M5.5 12h.01M12 12h.01M18.5 12h.01" />
+    </Icon>
+  );
+}
+
+export function TrashIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 12.5h9l1-12.5M10 11v5M14 11v5" />
+    </Icon>
+  );
+}
+
 export function UploadIcon(props: IconProps) {
   return (
     <Icon {...props}>

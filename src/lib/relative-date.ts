@@ -2,7 +2,7 @@
  * Time zone used for calendar dates ("Oct 16", "Yesterday"). Pages are
  * rendered on the server (UTC on Vercel), so the app's own zone is fixed here.
  */
-export const APP_TIME_ZONE = "Europe/Paris";
+export const APP_TIME_ZONE = "Africa/Johannesburg";
 
 const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
