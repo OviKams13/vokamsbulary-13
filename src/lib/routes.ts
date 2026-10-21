@@ -1,11 +1,11 @@
 /**
- * App routes, in one place. Some point to pages built in later phases.
+ * App routes, in one place. Posts use the singular `/post/` everywhere.
  */
 export const routes = {
   home: "/",
   totw: (number: number) => `/totw/${number}`,
-  /** Post detail page (Phase 6, 6.1: `/post/[id]`). Not built yet: 404 until then. */
+  /** Post detail page (6.1). `?w=n` selects the n-th word tab (6.2). */
   post: (id: string) => `/post/${id}`,
   /** Upload page (Phase 7, 7.1). Not built yet: 404 until then. */
-  newPost: "/posts/new",
+  newPost: "/post/new",
 } as const;
