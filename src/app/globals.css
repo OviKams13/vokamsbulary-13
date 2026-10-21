@@ -81,9 +81,9 @@
   -webkit-box-decoration-break: clone;
 }
 
-/* Mobile drawer (src/components/shell/mobile-drawer.tsx): slide in, and no page scroll behind it. */
+/* No page scroll behind a modal dialog (mobile drawer, delete confirmation). */
 @layer base {
-  html:has(dialog.drawer[open]) {
+  html:has(dialog:modal) {
     overflow: hidden;
   }
 }
