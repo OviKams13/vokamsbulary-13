@@ -30,11 +30,7 @@
   --color-paper: #fef7f2;
   --color-paper-quote: #fbf8f0;
 
-  /* Post themes (backgrounds; full presets live in src/themes) */
-  --color-theme-strawberry: #e0405a;
-  --color-theme-banana: #f4c63d;
-  --color-theme-ocean: #0d3b78;
-  --color-theme-football: #101012;
+  /* Post theme colors live in src/themes (one place for all 8 presets). */
 
   /* Radii */
   --radius-card: 1.75rem; /* themed post card (28px) */
