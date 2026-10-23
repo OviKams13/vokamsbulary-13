@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
-import { Explanation } from "@/components/explanation";
 import { ArrowLeftIcon } from "@/components/icons";
 import { ThemedPost } from "@/components/themed-post";
 import { getPostDetail } from "@/db/post-detail";
@@ -11,7 +10,9 @@ import { getTotwOverview } from "@/db/totw";
 import { routes } from "@/lib/routes";
 import { capitalize } from "@/lib/text";
 
+import { ExplanationPanel } from "./explanation-panel";
 import { PostMenu } from "./post-menu";
+import { FrenchPostText, PostTranslationProvider } from "./post-translation";
 import { WordTabs } from "./word-tabs";
 
 // Shared by generateMetadata and the page: one database round trip.
@@ -28,14 +29,16 @@ export async function generateMetadata({ params }: PageProps<"/post/[id]">): Pro
 
 /**
  * Post detail (6.1–6.4, mockups 02-D / 02-M): back link, the themed post,
- * one tab per word, the selected word's explanation, and the ⋯ menu with
- * "Delete post". Only published posts have a detail page.
+ * one tab per word, the selected word's explanation with its Translate
+ * toggle (8.2), and the ⋯ menu with "Delete post". Only published posts
+ * have a detail page.
  */
 export default async function PostPage({ params, searchParams }: PageProps<"/post/[id]">) {
   const [{ id }, { w }] = await Promise.all([params, searchParams]);
   const [post, { current }] = await Promise.all([loadPost(id), getTotwOverview()]);
   if (!post) notFound();
 
+  const selected = selectedWord(w, post.terms.length);
   const back = post.totwNumber === current.number ? routes.home : routes.totw(post.totwNumber);
   const label = `TOTW ${post.totwNumber} · #${post.position}`;
   const menu = <PostMenu postId={post.id} label={label} wordCount={post.terms.length} />;
@@ -71,26 +74,37 @@ export default async function PostPage({ params, searchParams }: PageProps<"/pos
           {menu}
         </div>
 
-        <ThemedPost
-          text={post.text}
-          themeKey={post.themeKey}
-          totwNumber={post.totwNumber}
-          position={post.position}
-          surfaces={post.terms.map((term) => term.surface)}
-        />
+        <PostTranslationProvider initialTextFr={post.textFr} initialSelected={selected}>
+          <ThemedPost
+            text={post.text}
+            themeKey={post.themeKey}
+            totwNumber={post.totwNumber}
+            position={post.position}
+            surfaces={post.terms.map((term) => term.surface)}
+            translation={<FrenchPostText />}
+          />
 
-        {post.terms.length > 0 ? (
-          <div className="mt-5 sm:mt-6">
-            <WordTabs
-              key={post.id}
-              labels={post.terms.map((term) => capitalize(term.headword))}
-              panels={post.terms.map((term) => (
-                <Explanation key={term.position} term={term} />
-              ))}
-              initial={selectedWord(w, post.terms.length)}
-            />
-          </div>
-        ) : null}
+          {post.terms.length > 0 ? (
+            <div className="mt-5 sm:mt-6">
+              <WordTabs
+                key={post.id}
+                labels={post.terms.map((term) => capitalize(term.headword))}
+                panels={post.terms.map((term) => (
+                  <ExplanationPanel
+                    key={term.position}
+                    termId={term.id}
+                    position={term.position}
+                    headword={term.headword}
+                    surface={term.surface}
+                    english={term.explanation}
+                    french={term.french}
+                  />
+                ))}
+                initial={selected}
+              />
+            </div>
+          ) : null}
+        </PostTranslationProvider>
       </main>
     </>
   );

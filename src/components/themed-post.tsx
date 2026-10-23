@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { HighlightedText } from "@/components/highlighted-text";
 import { PostTag } from "@/components/post-tag";
 import { ThemePill } from "@/components/theme-pill";
@@ -11,6 +13,8 @@ type ThemedPostProps = {
   position: number;
   /** Term surfaces to highlight (E-06). */
   surfaces: string[];
+  /** Shown under the text, inside the panel: the French text on the detail page (8.3). */
+  translation?: ReactNode;
 };
 
 /**
@@ -18,7 +22,14 @@ type ThemedPostProps = {
  * TOTW/#position ribbon, the theme pill and the text panel with every term
  * highlighted. Used by the feed card (wrapped in a link) and the detail page.
  */
-export function ThemedPost({ text, themeKey, totwNumber, position, surfaces }: ThemedPostProps) {
+export function ThemedPost({
+  text,
+  themeKey,
+  totwNumber,
+  position,
+  surfaces,
+  translation,
+}: ThemedPostProps) {
   const theme = getTheme(themeKey);
 
   return (
@@ -36,12 +47,15 @@ export function ThemedPost({ text, themeKey, totwNumber, position, surfaces }: T
         <ThemePill themeKey={theme.key} />
       </div>
 
-      <p
-        className="relative mt-3.5 rounded-[0.875rem] px-4 py-3.5 text-base leading-[1.7] text-ink sm:mt-4 sm:rounded-paper sm:px-5.5 sm:py-4.5 sm:text-lg sm:leading-[1.72]"
+      <div
+        className="relative mt-3.5 rounded-[0.875rem] px-4 py-3.5 text-ink sm:mt-4 sm:rounded-paper sm:px-5.5 sm:py-4.5"
         style={{ backgroundColor: theme.paper }}
       >
-        <HighlightedText text={text} surfaces={surfaces} />
-      </p>
+        <p className="text-base leading-[1.7] sm:text-lg sm:leading-[1.72]">
+          <HighlightedText text={text} surfaces={surfaces} />
+        </p>
+        {translation}
+      </div>
     </div>
   );
 }
