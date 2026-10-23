@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 
-import { getNextSlot } from "@/db/drafts";
+import { getNextSlot, getUnfinishedDrafts } from "@/db/drafts";
 
+import { DraftsList } from "./drafts-list";
 import { NewPostBar, NewPostSteps } from "./new-post-header";
 import { UploadForm } from "./upload-form";
 
@@ -14,11 +15,11 @@ export const maxDuration = 300;
 
 /**
  * Upload page (7.1, mockup 03a): "Next up · TOTW n · #m", the 3-step
- * indicator and the drop zone. The "Unfinished drafts" list comes with 7.10.
+ * indicator, the drop zone, and the "Unfinished drafts" list (7.10).
  */
 export default async function NewPostPage() {
   await connection();
-  const slot = await getNextSlot();
+  const [slot, drafts] = await Promise.all([getNextSlot(), getUnfinishedDrafts()]);
 
   return (
     <>
@@ -28,6 +29,7 @@ export default async function NewPostPage() {
         <div className="mt-5 lg:mt-7">
           <UploadForm />
         </div>
+        <DraftsList drafts={drafts} />
       </main>
     </>
   );
