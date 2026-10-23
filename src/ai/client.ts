@@ -43,6 +43,9 @@ export type CallClaudeOptions<Schema extends z.ZodType> = {
   effort?: Effort;
 };
 
+/** A validated answer and the model that actually produced it (a fallback may have answered). */
+export type ClaudeResult<Output> = { output: Output; model: string };
+
 export class ClaudeCallError extends Error {
   override name = "ClaudeCallError";
 }
@@ -56,7 +59,7 @@ export class ClaudeCallError extends Error {
  */
 export async function callClaude<Schema extends z.ZodType>(
   options: CallClaudeOptions<Schema>,
-): Promise<z.infer<Schema>> {
+): Promise<ClaudeResult<z.infer<Schema>>> {
   const started = performance.now();
   let model: string = CLAUDE_MODEL;
   let inputTokens: number | null = null;
@@ -94,7 +97,7 @@ export async function callClaude<Schema extends z.ZodType>(
     const output = parseAnswer(response.content, options.schema);
 
     await logCall(options, { model, inputTokens, outputTokens, started, error: null });
-    return output;
+    return { output, model };
   } catch (error) {
     const message = describeError(error);
     await logCall(options, { model, inputTokens, outputTokens, started, error: message });

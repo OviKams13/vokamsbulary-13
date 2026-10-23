@@ -22,7 +22,7 @@ const Answer = z.object({
 async function main() {
   console.log(`Calling ${CLAUDE_MODEL}…`);
 
-  const answer = await callClaude({
+  const { output: answer } = await callClaude({
     kind: "explain",
     postId: null,
     schema: Answer,
