@@ -18,6 +18,18 @@ const barlowCondensed = Barlow_Condensed({
 export const metadata: Metadata = {
   title: "Vokamsbulary 13",
   description: "Personal English vocabulary feed, grouped by Team of the Week.",
+  // iOS home-screen app (11.1). The manifest (app/manifest.ts) covers Android
+  // and desktop; the apple-touch-icon comes from app/apple-icon.png.
+  appleWebApp: {
+    capable: true,
+    title: "Vokams 13",
+    // Black bar above the page: the app background is near-black, and the
+    // content stays below the bar (no safe-area padding needed).
+    statusBarStyle: "black",
+  },
+  // Next only writes the standard `mobile-web-app-capable`; older iOS versions
+  // open full screen only with Apple's own tag.
+  other: { "apple-mobile-web-app-capable": "yes" },
 };
 
 export const viewport: Viewport = {
