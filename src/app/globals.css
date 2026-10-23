@@ -108,9 +108,26 @@ dialog.drawer[open]::backdrop {
   }
 }
 
+/* TOTW quick list bottom sheet (9.3, mockup 04-M): slides up from the bottom. */
+dialog.sheet[open] {
+  animation: sheet-in 200ms ease-out;
+}
+
+dialog.sheet[open]::backdrop {
+  animation: drawer-fade 200ms ease-out;
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   dialog.drawer[open],
-  dialog.drawer[open]::backdrop {
+  dialog.drawer[open]::backdrop,
+  dialog.sheet[open],
+  dialog.sheet[open]::backdrop {
     animation: none;
   }
 }

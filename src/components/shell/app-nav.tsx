@@ -18,7 +18,8 @@ type AppNavProps = {
 
 /**
  * Navigation content shared by the desktop sidebar and the mobile drawer:
- * logo, search field (placeholder), New post, TOTW list, footer stats.
+ * logo, search field (placeholder), New post, TOTW list (with its quick list,
+ * Phase 9), footer stats. The drawer adds the long-press hint (01-drawer).
  */
 export function AppNav({ overview, variant, action }: AppNavProps) {
   const drawer = variant === "drawer";
@@ -51,7 +52,12 @@ export function AppNav({ overview, variant, action }: AppNavProps) {
         Team of the week
       </h2>
       <div className="-mx-1 mt-3 min-h-0 flex-1 overflow-y-auto px-1 pt-1">
-        <TotwNav totws={overview.totws} />
+        <TotwNav totws={overview.totws} variant={variant} />
+        {drawer ? (
+          <p className="mt-5 text-[0.8125rem] leading-snug text-muted">
+            Long-press a team to see its quick list.
+          </p>
+        ) : null}
       </div>
 
       <p className="pt-6 text-[0.8125rem] text-muted">{footerText(overview)}</p>
