@@ -2,6 +2,8 @@
 
 import { type KeyboardEvent, type ReactNode, useId, useRef, useState } from "react";
 
+import { usePostTranslation } from "./post-translation";
+
 type WordTabsProps = {
   /** Tab labels, in `terms.position` order. */
   labels: string[];
@@ -16,14 +18,21 @@ type WordTabsProps = {
  * shown) and writes `?w=n` into the URL with `replaceState`, so the address can
  * be shared or reloaded but the Back button isn't filled with tab changes.
  * Arrow keys, Home and End move between tabs.
+ *
+ * Every panel stays mounted (the others are hidden), so a word keeps what it
+ * shows, e.g. its French version (8.2), when you switch tabs and come back.
+ * The tab on screen is shared with the post card, which shows the French text
+ * while that word is in French (8.3).
  */
 export function WordTabs({ labels, panels, initial }: WordTabsProps) {
   const [selected, setSelected] = useState(initial);
   const id = useId();
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
+  const translation = usePostTranslation();
 
   function select(word: number) {
     setSelected(word);
+    translation?.setSelected(word);
     const url = new URL(window.location.href);
     if (word === 1) url.searchParams.delete("w");
     else url.searchParams.set("w", String(word));
@@ -69,7 +78,7 @@ export function WordTabs({ labels, panels, initial }: WordTabsProps) {
               role="tab"
               id={`${id}-tab-${word}`}
               aria-selected={active}
-              aria-controls={`${id}-panel`}
+              aria-controls={`${id}-panel-${word}`}
               tabIndex={active ? 0 : -1}
               onClick={() => select(word)}
               className={`h-10 shrink-0 rounded-[0.875rem] border px-3.5 text-sm font-bold transition sm:h-11 sm:px-4 sm:text-[0.9375rem] ${
@@ -84,14 +93,18 @@ export function WordTabs({ labels, panels, initial }: WordTabsProps) {
         })}
       </div>
 
-      <div
-        role="tabpanel"
-        id={`${id}-panel`}
-        aria-labelledby={`${id}-tab-${selected}`}
-        className="mt-4 rounded-[1.375rem] border border-line bg-surface px-4.5 py-6 sm:mt-5 sm:rounded-3xl sm:px-8 sm:py-8"
-      >
-        {panels[selected - 1]}
-      </div>
+      {panels.map((panel, index) => (
+        <div
+          key={index}
+          role="tabpanel"
+          id={`${id}-panel-${index + 1}`}
+          aria-labelledby={`${id}-tab-${index + 1}`}
+          hidden={index + 1 !== selected}
+          className="mt-4 rounded-[1.375rem] border border-line bg-surface px-4.5 py-6 sm:mt-5 sm:rounded-3xl sm:px-8 sm:py-8"
+        >
+          {panel}
+        </div>
+      ))}
     </>
   );
 }

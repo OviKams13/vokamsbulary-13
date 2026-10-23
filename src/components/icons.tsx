@@ -137,3 +137,13 @@ export function RetryIcon(props: IconProps) {
     </Icon>
   );
 }
+
+/** "文A"-style glyph: Translate / Show English. */
+export function TranslateIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M3 5.5h9M7.5 3.5v2M10 5.5c-.8 3.6-3.2 6.3-6.5 7.8M5.5 8.5c1.2 2 2.9 3.5 5 4.5" />
+      <path d="M12.5 20.5l4-9.5 4 9.5M14 17h5" />
+    </Icon>
+  );
+}
