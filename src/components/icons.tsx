@@ -65,6 +65,25 @@ export function ListIcon(props: IconProps) {
   );
 }
 
+export function CheckIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
+    </Icon>
+  );
+}
+
+/** Picture frame: "Choose screenshot". */
+export function ImageIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+      <circle cx="9" cy="10" r="1.6" />
+      <path d="M20.5 15.5l-5-5-9 9" />
+    </Icon>
+  );
+}
+
 export function ArrowLeftIcon(props: IconProps) {
   return (
     <Icon {...props}>
