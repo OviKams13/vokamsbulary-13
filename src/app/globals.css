@@ -114,3 +114,51 @@ dialog.drawer[open]::backdrop {
     animation: none;
   }
 }
+
+/* Processing screen (7.4, mockup 03b): a marker-yellow band sweeping the screenshot, and a gold spinner. */
+.scan-band {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 22%;
+  background: linear-gradient(
+    to bottom,
+    rgb(255 233 59 / 0) 0%,
+    rgb(255 233 59 / 0.32) 85%,
+    rgb(232 184 75 / 0.85) 100%
+  );
+  animation: scan 2.4s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes scan {
+  from {
+    transform: translateY(-20%);
+  }
+  to {
+    transform: translateY(380%);
+  }
+}
+
+.spinner {
+  border-radius: 9999px;
+  border: 3px solid var(--color-line-strong);
+  border-top-color: var(--color-gold);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scan-band {
+    animation: none;
+    top: 40%;
+  }
+  .spinner {
+    animation-duration: 2.5s;
+  }
+}
