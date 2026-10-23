@@ -37,3 +37,12 @@ export function parseTotwNumber(segment: string): number | null {
   if (!/^[1-9]\d{0,5}$/.test(segment)) return null;
   return Number(segment);
 }
+
+/** One filled position of a TOTW quick list (9.1, F11). */
+export type QuickListItem = {
+  /** 1–15 inside the TOTW. */
+  position: number;
+  postId: string;
+  /** The post's headwords, in term order, without repeats. */
+  headwords: string[];
+};

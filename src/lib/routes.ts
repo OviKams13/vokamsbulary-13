@@ -4,6 +4,8 @@
 export const routes = {
   home: "/",
   totw: (number: number) => `/totw/${number}`,
+  /** Positions 1–15 of a TOTW with their headwords, read by the quick list (9.1). */
+  totwQuickList: (number: number) => `/api/totw/${number}/quick-list`,
   /** Post detail page (6.1). `?w=n` selects the n-th word tab (6.2). */
   post: (id: string) => `/post/${id}`,
   /** Upload page (7.1). */
