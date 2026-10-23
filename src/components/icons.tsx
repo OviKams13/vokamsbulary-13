@@ -117,3 +117,23 @@ export function UploadIcon(props: IconProps) {
     </Icon>
   );
 }
+
+/** Warning triangle: "Already seen in TOTW n · #m". */
+export function AlertIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M10.3 4.3L2.9 17.5A2 2 0 0 0 4.6 20.5h14.8a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0z" />
+      <path d="M12 9.5v4M12 17h.01" />
+    </Icon>
+  );
+}
+
+/** Circular arrow: "Retry". */
+export function RetryIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M20 12a8 8 0 1 1-2.6-5.9" />
+      <path d="M20 4.5v5h-5" />
+    </Icon>
+  );
+}

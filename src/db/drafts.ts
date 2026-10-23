@@ -1,6 +1,6 @@
 import "server-only";
 
-import { asc, count, eq } from "drizzle-orm";
+import { asc, count, desc, eq, ne } from "drizzle-orm";
 
 import { TOTW_SIZE } from "@/lib/totw";
 
@@ -19,15 +19,20 @@ export async function getNextSlot(): Promise<NextSlot> {
   };
 }
 
+export type DraftStatus = (typeof posts.$inferSelect)["status"];
+
 export type Draft = {
   id: string;
-  status: (typeof posts.$inferSelect)["status"];
+  status: DraftStatus;
   imageUrl: string;
   imageWidth: number;
   imageHeight: number;
   extractedText: string | null;
+  /** Text saved at Verify (null until the first save). */
+  text: string | null;
   lastError: string | null;
-  terms: { position: number; surface: string; headword: string }[];
+  createdAt: Date;
+  terms: { position: number; surface: string; headword: string; addedByUser: boolean }[];
 };
 
 /** One post with its terms, any status. Null for an unknown id. */
@@ -41,12 +46,19 @@ export async function getDraft(id: string): Promise<Draft | null> {
         imageWidth: posts.imageWidth,
         imageHeight: posts.imageHeight,
         extractedText: posts.extractedText,
+        text: posts.text,
         lastError: posts.lastError,
+        createdAt: posts.createdAt,
       })
       .from(posts)
       .where(eq(posts.id, id)),
     db
-      .select({ position: terms.position, surface: terms.surface, headword: terms.headword })
+      .select({
+        position: terms.position,
+        surface: terms.surface,
+        headword: terms.headword,
+        addedByUser: terms.addedByUser,
+      })
       .from(terms)
       .where(eq(terms.postId, id))
       .orderBy(asc(terms.position)),
@@ -54,11 +66,39 @@ export async function getDraft(id: string): Promise<Draft | null> {
   return post ? { ...post, terms: termRows } : null;
 }
 
-/** What the processing screen polls (7.4): small on purpose. */
+/** What the processing and Verify screens poll (7.4, 7.8): small on purpose. */
 export async function getDraftStatus(id: string) {
   const [row] = await db
     .select({ status: posts.status, lastError: posts.lastError })
     .from(posts)
     .where(eq(posts.id, id));
   return row ?? null;
+}
+
+export type UnfinishedDraft = {
+  id: string;
+  status: DraftStatus;
+  imageUrl: string;
+  lastError: string | null;
+  updatedAt: Date;
+  termCount: number;
+};
+
+/** "Unfinished drafts" on the upload page (7.10): every unpublished post, last saved first. */
+export async function getUnfinishedDrafts(): Promise<UnfinishedDraft[]> {
+  return db
+    .select({
+      id: posts.id,
+      status: posts.status,
+      imageUrl: posts.imageUrl,
+      lastError: posts.lastError,
+      updatedAt: posts.updatedAt,
+      termCount: count(terms.id),
+    })
+    .from(posts)
+    .leftJoin(terms, eq(terms.postId, posts.id))
+    .where(ne(posts.status, "published"))
+    .groupBy(posts.id)
+    .orderBy(desc(posts.updatedAt))
+    .limit(20);
 }

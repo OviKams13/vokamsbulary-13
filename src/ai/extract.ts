@@ -38,15 +38,17 @@ Return two things.
 2. terms: every word or expression underlined in red, in reading order.
 - surface: the underlined words copied character for character from your text: same letters, same case, same form ("haggling", "snowballed", "Thrilled").
 - One underline that covers several words is one term ("hard to swallow", "bounce back"). Two separate underlines are two terms, even when they touch.
-- headword: the dictionary form, in lowercase. Verbs in the infinitive without "to" (haggling → haggle, snowballed → snowball, bleaches → bleach). Nouns in the singular. Adjectives and adverbs as they are (thrilled → thrilled). For an expression, its base form (bouncing back → bounce back, was hard to swallow → hard to swallow).
+- headword: the dictionary form, in lowercase. Verbs in the infinitive without "to" (haggling → haggle, snowballed → snowball, bleaches → bleach). Nouns in the singular. Adjectives and adverbs as they are (thrilled → thrilled). For an expression that is a dictionary entry, its base form (bouncing back → bounce back, was hard to swallow → hard to swallow, lump sums → lump sum).
+- When the underlined words are a free phrase rather than a dictionary entry (an adjective + noun group, a fragment of a sentence), keep them as written, only in lowercase: don't singularise or reshape them (yet proven steps → yet proven steps).
 - Only red (or red-orange) marks count: underlines, circles or highlights. Ignore blue links and marks of any other color.
 - If nothing is marked in red, return an empty list.`;
 
 export async function extractScreenshot(options: {
-  postId: string;
+  /** Null for a test run that belongs to no post (the call is still logged). */
+  postId: string | null;
   imageUrl: string;
 }): Promise<Extraction> {
-  return callClaude({
+  const { output } = await callClaude({
     kind: "extract",
     postId: options.postId,
     schema: ExtractionSchema,
@@ -66,4 +68,5 @@ export async function extractScreenshot(options: {
       },
     ],
   });
+  return output;
 }

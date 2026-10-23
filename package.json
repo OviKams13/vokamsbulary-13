@@ -25,7 +25,7 @@
     "ai:smoke": "tsx --conditions=react-server --env-file=.env.local scripts/ai-smoke.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.135.0",
+    "@anthropic-ai/sdk": "^0.137.0",
     "@neondatabase/serverless": "^1.2.0",
     "@vercel/blob": "^2.8.2",
     "drizzle-orm": "^0.45.4",

@@ -48,6 +48,15 @@ export function formatPostDate(
   return { long: label, short: label };
 }
 
+/**
+ * The long form, for use inside a sentence ("Saved yesterday", "Draft saved ·
+ * 2h ago"): "Just now" and "Yesterday" lose their capital.
+ */
+export function formatInlineDate(date: Date, now: Date = new Date()): string {
+  const { long } = formatPostDate(date, now);
+  return long === "Just now" || long === "Yesterday" ? long.toLowerCase() : long;
+}
+
 /** Full date and time, for the `title` tooltip of the date. */
 export function formatFullDate(date: Date): string {
   return new Intl.DateTimeFormat("en-GB", {
