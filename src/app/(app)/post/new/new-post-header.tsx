@@ -10,8 +10,9 @@ export type NewPostStep = 1 | 2 | 3;
 /**
  * Mobile bar of the New post flow (mockups 03a-M / 03b-M): ✕, "New post" and
  * "TOTW n · #m", in place of the feed's top bar. Hidden on desktop.
+ * The title follows the step ("Check what we found" on Verify, 03c-M).
  */
-export function NewPostBar({ slot }: { slot: NextSlot }) {
+export function NewPostBar({ slot, title = "New post" }: { slot: NextSlot; title?: string }) {
   return (
     <div className="sticky top-0 z-30 border-b border-line bg-bg/95 backdrop-blur lg:hidden">
       <div className="flex h-15 items-center gap-2 px-4">
@@ -22,7 +23,7 @@ export function NewPostBar({ slot }: { slot: NextSlot }) {
         >
           <CloseIcon size={22} />
         </Link>
-        <h1 className="text-[1.0625rem] font-bold">New post</h1>
+        <h1 className="text-[1.0625rem] font-bold">{title}</h1>
         <p className="ml-auto font-display text-[0.9375rem] font-extrabold tracking-wide text-gold">
           {slotLabel(slot)}
         </p>
@@ -36,7 +37,15 @@ export function NewPostBar({ slot }: { slot: NextSlot }) {
  * Mobile: a 3-segment progress line and "Step x of 3 · Label".
  * Desktop: "Next up · TOTW n · #m", "New post" and the 3 step pills.
  */
-export function NewPostSteps({ step, slot }: { step: NewPostStep; slot: NextSlot }) {
+export function NewPostSteps({
+  step,
+  slot,
+  title = "New post",
+}: {
+  step: NewPostStep;
+  slot: NextSlot;
+  title?: string;
+}) {
   return (
     <>
       <div className="lg:hidden">
@@ -62,7 +71,7 @@ export function NewPostSteps({ step, slot }: { step: NewPostStep; slot: NextSlot
             Next up · {slotLabel(slot)}
           </p>
           <h1 className="mt-2 text-[2.125rem] leading-none font-extrabold tracking-tight">
-            New post
+            {title}
           </h1>
         </div>
         <ol className="flex gap-1.5" aria-label="Steps">
