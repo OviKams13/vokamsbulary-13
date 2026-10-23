@@ -8,7 +8,8 @@ import { routes } from "@/lib/routes";
 
 /**
  * One post in the feed (5.2, mockups 01-D / 01-M): the themed post, then the
- * word chips and the publication date. The card opens the post detail page.
+ * word chips and the publication date. The card opens the post detail page;
+ * a chip searches for its word (10.2).
  */
 export function PostCard({ post, now }: { post: FeedPost; now: Date }) {
   const headwords = [...new Set(post.terms.map((term) => term.headword))];
@@ -34,7 +35,7 @@ export function PostCard({ post, now }: { post: FeedPost; now: Date }) {
         <ul className="flex min-w-0 flex-1 flex-wrap gap-2">
           {headwords.map((headword) => (
             <li key={headword}>
-              <TermChip>{headword}</TermChip>
+              <TermChip headword={headword} />
             </li>
           ))}
         </ul>
