@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { type DeletedPost, deletePost } from "@/db/delete-post";
@@ -37,5 +38,8 @@ export async function deletePostAction(
   // redirect isn't followed when a Server Action redirects to it.
   const { current } = await getTotwOverview();
   const totw = deleted?.totwNumber;
+  // The sidebar's TOTW counts live in the shared layout, which a redirect alone
+  // doesn't re-render: purge the client cache so they drop the deleted post.
+  revalidatePath("/", "layout");
   redirect(totw && totw !== current.number ? routes.totw(totw) : routes.home);
 }
