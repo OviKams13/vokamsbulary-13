@@ -134,7 +134,7 @@ async function logCall(
     error: string | null;
   },
 ) {
-  await db.insert(aiCalls).values({
+  const row = {
     postId: options.postId,
     kind: options.kind,
     model: result.model,
@@ -143,13 +143,32 @@ async function logCall(
     durationMs: Math.round(performance.now() - result.started),
     success: result.error === null,
     error: result.error,
-  });
+  };
+  try {
+    await db.insert(aiCalls).values(row);
+  } catch {
+    // The post may have been deleted during the call (a cancelled draft): keep
+    // the cost history without the link, as ON DELETE SET NULL would have.
+    await db
+      .insert(aiCalls)
+      .values({ ...row, postId: null })
+      .catch((error: unknown) => {
+        console.error("Could not log the Claude call:", error);
+      });
+  }
 }
 
 function describeError(error: unknown): string {
   if (error instanceof ClaudeCallError) return error.message;
   if (error instanceof Anthropic.APIError) {
-    return `Claude API error ${error.status ?? "(no status)"}: ${error.message}`;
+    // The API's own message ("invalid x-api-key"), not the raw JSON body.
+    const body: unknown = error.error;
+    const apiMessage =
+      typeof body === "object" && body !== null && "error" in body
+        ? (body.error as { message?: unknown }).message
+        : undefined;
+    const message = typeof apiMessage === "string" ? apiMessage : error.message;
+    return `Claude API error ${error.status ?? "(no status)"}: ${message}`;
   }
   return error instanceof Error ? error.message : String(error);
 }
