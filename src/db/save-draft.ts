@@ -67,7 +67,14 @@ export async function saveDraft(id: string, input: DraftInput): Promise<SaveResu
   writes.push(
     db
       .update(posts)
-      .set({ text: input.text, status: "extracted", lastError: null, updatedAt: new Date() })
+      // A French text (E-07) only belongs to the text it translates: a new text has none yet.
+      .set({
+        text: input.text,
+        textFr: null,
+        status: "extracted",
+        lastError: null,
+        updatedAt: new Date(),
+      })
       .where(and(eq(posts.id, id), editable)),
   );
   await db.batch(writes);

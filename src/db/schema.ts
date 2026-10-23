@@ -60,6 +60,11 @@ export const posts = pgTable(
     extractedText: text("extracted_text"),
     /** Text confirmed at verification. This is the text the post displays. */
     text: text("text"),
+    /**
+     * French translation of `text` (E-07), made by call #3 with the first
+     * Translate of the post. Only published posts have one; cleared if `text` changes.
+     */
+    textFr: text("text_fr"),
     /** Theme preset key from `src/themes`, set at publication (D-11). */
     themeKey: text("theme_key"),
     /** Set at publication. Defines the TOTW order (D-10). */
