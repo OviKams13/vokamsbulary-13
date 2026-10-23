@@ -1,11 +1,12 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
 
 import { BrandLogo } from "@/components/brand-logo";
 import { PlusIcon, SearchIcon } from "@/components/icons";
 import type { TotwOverview } from "@/db/totw";
 import { routes } from "@/lib/routes";
 
+import { SearchField } from "./search-field";
 import { TotwNav } from "./totw-nav";
 
 type AppNavProps = {
@@ -18,7 +19,7 @@ type AppNavProps = {
 
 /**
  * Navigation content shared by the desktop sidebar and the mobile drawer:
- * logo, search field (placeholder), New post, TOTW list (with its quick list,
+ * logo, search field (live in the sidebar, a link in the drawer, Phase 10), New post, TOTW list (with its quick list,
  * Phase 9), footer stats. The drawer adds the long-press hint (01-drawer).
  */
 export function AppNav({ overview, variant, action }: AppNavProps) {
@@ -38,7 +39,16 @@ export function AppNav({ overview, variant, action }: AppNavProps) {
         {action}
       </div>
 
-      <SearchPlaceholder className={drawer ? "mt-3" : "mt-2"} />
+      {drawer ? (
+        <SearchLink className="mt-3" />
+      ) : (
+        <div className="mt-2">
+          {/* useSearchParams needs a Suspense boundary; the fallback looks the same. */}
+          <Suspense fallback={<SearchLink />}>
+            <SearchField variant="sidebar" />
+          </Suspense>
+        </div>
+      )}
 
       <Link
         href={routes.newPost}
@@ -73,21 +83,19 @@ function footerText({ wordsLearned, totws }: TotwOverview): string {
   return `${words} · ${teams}`;
 }
 
-/** Search field look-alike. Search itself arrives in Phase 10. */
-function SearchPlaceholder({ className }: { className: string }) {
+/**
+ * Search field look-alike that opens the search page (10.2): in the drawer,
+ * where typing would close the drawer under the finger, and as the sidebar
+ * field's loading fallback.
+ */
+function SearchLink({ className = "" }: { className?: string }) {
   return (
-    <div
-      className={`flex h-11 shrink-0 items-center gap-2.5 rounded-full border border-line-strong bg-surface-2 px-4 text-muted ${className}`}
-      title="Search arrives in Phase 10"
+    <Link
+      href={routes.search()}
+      className={`flex h-11 shrink-0 items-center gap-2.5 rounded-full border border-line-strong bg-surface-2 px-4 text-[0.9375rem] text-muted transition hover:border-muted/50 ${className}`}
     >
       <SearchIcon size={17} />
-      <input
-        type="search"
-        disabled
-        placeholder="Search words & texts"
-        aria-label="Search words and texts (not available yet)"
-        className="w-full min-w-0 bg-transparent text-[0.9375rem] text-fg outline-none placeholder:text-muted disabled:cursor-not-allowed"
-      />
-    </div>
+      Search words &amp; texts
+    </Link>
   );
 }

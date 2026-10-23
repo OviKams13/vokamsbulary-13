@@ -34,16 +34,14 @@ export function MobileTopBar({ overview }: { overview: TotwOverview }) {
         <BrandLogo withName size={26} nameClassName="text-[1.0625rem]" />
       </Link>
 
-      {/* Opens the search page in Phase 10. */}
-      <button
-        type="button"
-        aria-disabled="true"
-        aria-label="Search (not available yet)"
-        title="Search arrives in Phase 10"
+      {/* The mobile search page (10.2, 05-M). */}
+      <Link
+        href={routes.search()}
+        aria-label="Search"
         className="-mr-1.5 ml-auto grid size-10 place-items-center rounded-lg text-fg"
       >
         <SearchIcon size={20} />
-      </button>
+      </Link>
     </header>
   );
 }
