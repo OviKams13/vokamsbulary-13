@@ -9,7 +9,7 @@ import { callClaude } from "./client";
  * the exact text and the red-underlined terms out, through structured outputs.
  */
 export const ExtractionSchema = z.object({
-  /** The passage, transcribed exactly. Empty when the image has no readable English text. */
+  /** Only the sentences with an underline (13.1), transcribed exactly. Empty when the image has no readable English text. */
   text: z.string(),
   /** Every red-underlined word or expression, in reading order. */
   terms: z.array(
@@ -29,10 +29,11 @@ const SYSTEM = `You read screenshots for a personal English vocabulary app. The 
 
 Return two things.
 
-1. text: the passage the user was reading, transcribed exactly.
+1. text: the sentences the user underlined words in, transcribed exactly.
 - Same words, spelling, capitalisation, punctuation and quotation marks as the image. Don't fix mistakes, don't translate, don't summarise.
-- Keep only the running prose that contains the red underlines (the paragraph or paragraphs around them). Leave out everything else in the screenshot: app or browser interface, menus, buttons, headlines, bylines, image captions, ads, timestamps, like or view counts.
-- Join lines that were only wrapped by the screen width with a single space. Keep a real paragraph break as one empty line.
+- Keep only the sentences that contain a red underline: each one complete, in reading order, nothing cut in the middle. Leave out every sentence without an underline, even inside the same paragraph, and everything else in the screenshot: app or browser interface, menus, buttons, headlines, bylines, image captions, ads, timestamps, like or view counts.
+- Keep it short: ideally 2 or 3 lines of the screenshot, never more than 4 or 5. Never drop an underlined term to stay short: every term must still be in your text.
+- Join lines that were only wrapped by the screen width, and sentences that follow each other, with a single space. Only sentences that come from different paragraphs are separated by one empty line.
 - If the image contains no readable English text, return an empty string.
 
 2. terms: every word or expression underlined in red, in reading order.
