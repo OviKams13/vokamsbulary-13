@@ -4,7 +4,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import { db } from "./index";
-import { explanations, postRanks, posts, terms, type Explanation } from "./schema";
+import { explanations, postRanks, posts, termExamples, terms, type Explanation } from "./schema";
 
 export type PostDetailTerm = {
   id: string;
@@ -15,6 +15,10 @@ export type PostDetailTerm = {
   explanation: Explanation | null;
   /** French version (8.1), once Translate was clicked for this term; null before. */
   french: Explanation | null;
+  /** The 5 usage examples (13.2); null for a post published before, until its examples view is opened. */
+  examples: string[] | null;
+  /** Their French translation, once the examples' Translate was clicked; null before. */
+  examplesFr: string[] | null;
 };
 
 export type PostDetail = {
@@ -31,6 +35,8 @@ export type PostDetail = {
 };
 
 const fr = alias(explanations, "fr");
+const examplesEn = alias(termExamples, "examples_en");
+const examplesFr = alias(termExamples, "examples_fr");
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -40,7 +46,8 @@ export function isPostId(value: string): boolean {
 
 /**
  * A published post with its TOTW place, its terms, their English
- * explanations (6.1–6.3) and the French ones already generated (8.2). One `db.batch`, so one round trip. Returns null for
+ * explanations (6.1–6.3), the French ones already generated (8.2) and the usage
+ * examples with their translation (13.2). One `db.batch`, so one round trip. Returns null for
  * an unknown id or a post that isn't published (drafts have no TOTW place).
  */
 export async function getPostDetail(id: string): Promise<PostDetail | null> {
@@ -67,6 +74,8 @@ export async function getPostDetail(id: string): Promise<PostDetail | null> {
         headword: terms.headword,
         explanation: explanations,
         french: fr,
+        examples: examplesEn.sentences,
+        examplesFr: examplesFr.sentences,
       })
       .from(terms)
       .leftJoin(
@@ -74,6 +83,8 @@ export async function getPostDetail(id: string): Promise<PostDetail | null> {
         and(eq(explanations.termId, terms.id), eq(explanations.language, "en")),
       )
       .leftJoin(fr, and(eq(fr.termId, terms.id), eq(fr.language, "fr")))
+      .leftJoin(examplesEn, and(eq(examplesEn.termId, terms.id), eq(examplesEn.language, "en")))
+      .leftJoin(examplesFr, and(eq(examplesFr.termId, terms.id), eq(examplesFr.language, "fr")))
       .where(eq(terms.postId, id))
       .orderBy(asc(terms.position)),
   ]);

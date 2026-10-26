@@ -36,7 +36,7 @@ export const postStatus = pgEnum("post_status", [
 
 export const explanationLanguage = pgEnum("explanation_language", ["en", "fr"]);
 
-export const aiCallKind = pgEnum("ai_call_kind", ["extract", "explain", "translate"]);
+export const aiCallKind = pgEnum("ai_call_kind", ["extract", "explain", "translate", "examples"]);
 
 // ---------------------------------------------------------------------------
 // Tables (ERD §3)
@@ -148,6 +148,33 @@ export const explanations = pgTable(
   (t) => [unique("explanations_term_id_language_key").on(t.termId, t.language)],
 );
 
+/**
+ * The 5 usage examples of one term in one language (13.2, E-09). Only the
+ * sentences, in order 1–5: no label, no explanation. The studied word (in
+ * French too) sits between ⟦ and ⟧, like the French post text (E-08), so it can
+ * be highlighted. The `en` row comes with the explanation (new posts) or the
+ * first time the examples are opened (older posts); the `fr` row with the
+ * first Translate of the examples.
+ */
+export const termExamples = pgTable(
+  "term_examples",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    termId: uuid("term_id")
+      .notNull()
+      .references(() => terms.id, { onDelete: "cascade" }),
+    language: explanationLanguage("language").notNull(),
+    sentences: text("sentences").array().notNull(),
+    /** Model id that produced it. */
+    model: text("model").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    unique("term_examples_term_id_language_key").on(t.termId, t.language),
+    check("term_examples_five_sentences", sql`cardinality(${t.sentences}) = 5`),
+  ],
+);
+
 /** A log of every Claude call (E-04): real costs and the upload rate limit. */
 export const aiCalls = pgTable(
   "ai_calls",
@@ -202,5 +229,6 @@ export type Term = typeof terms.$inferSelect;
 export type NewTerm = typeof terms.$inferInsert;
 export type Explanation = typeof explanations.$inferSelect;
 export type NewExplanation = typeof explanations.$inferInsert;
+export type TermExamples = typeof termExamples.$inferSelect;
 export type AiCall = typeof aiCalls.$inferSelect;
 export type NewAiCall = typeof aiCalls.$inferInsert;

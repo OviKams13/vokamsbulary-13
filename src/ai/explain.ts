@@ -3,11 +3,13 @@ import "server-only";
 import { z } from "zod";
 
 import { callClaude, type ClaudeResult } from "./client";
+import { EXAMPLES_RULES } from "./examples";
 
 /**
  * Claude call #2, explanation (7.8, F5, feasibility §6.3): the confirmed text
  * and terms in (no image), one English explanation per term out, through
- * structured outputs.
+ * structured outputs. Since 13.2 it also writes the 5 usage examples of each
+ * term (`examples.ts`).
  */
 
 /** An English question: it ends with "?", possibly followed by a closing quote. */
@@ -28,6 +30,8 @@ const TermExplanationSchema = z.object({
   }),
   /** One example sentence, always a question (feasibility §6.3). */
   example: z.string().regex(QUESTION, "The example must be a question ending with ?"),
+  /** The 5 usage examples (13.2), the studied word between ⟦ ⟧; checked by `validExamples()`. */
+  examples: z.array(z.string()),
   inYourText: z.object({
     /** Short excerpt copied exactly from the text, containing the term as written. */
     quote: z.string(),
@@ -53,11 +57,16 @@ Fields, for each term:
 - example: one natural sentence that uses the term, in a new situation (not the text's). It is ALWAYS a question, ends with "?", and speaks to the reader so they could answer it ("Were you thrilled when everyone jumped out and yelled surprise?"). Never a statement.
 - inYourText.quote: the part of the text that contains the term, copied exactly (same words, case and punctuation), with the term written exactly as given. A clause or short sentence of about 5 to 15 words, not the whole paragraph. No quotation marks around it.
 - inYourText.explanation: one or two sentences on what the term means in that exact spot, naming the people or things of the text.
+- examples: five usage examples of the term, a separate list from "example" (the question). Follow the usage examples rules below. The term in each sentence is the term as given in the request, in whatever form fits the sentence.
 
 Use simple, everyday English everywhere except in fr. Return exactly one explanation per term, in the order given.
 
+Usage examples rules.
+
+${EXAMPLES_RULES}
+
 Example, for the term "reluctant" in "The coach was adamant that nobody would skip training. A few players were reluctant at first, but he refused to budge.":
-{"position": 1, "fr": ["Réticent", "Hésitant", "Peu enclin"], "definition": "Not willing to do something, so you do it slowly or without enthusiasm.", "analogy": {"title": "The cold pool analogy", "body": "You stand at the edge of a cold pool, one toe in the water. You will get in, but not happily.", "emoji": "🏊"}, "example": "Were you reluctant to speak English in front of the class?", "inYourText": {"quote": "A few players were reluctant at first", "explanation": "Some players did not want to train at the beginning."}}`;
+{"position": 1, "fr": ["Réticent", "Hésitant", "Peu enclin"], "definition": "Not willing to do something, so you do it slowly or without enthusiasm.", "analogy": {"title": "The cold pool analogy", "body": "You stand at the edge of a cold pool, one toe in the water. You will get in, but not happily.", "emoji": "🏊"}, "example": "Were you reluctant to speak English in front of the class?", "examples": ["Most people feel ⟦reluctant⟧ to ask for a raise.", "I'm a bit ⟦reluctant⟧ to lend him my car again.", "She was ⟦reluctant⟧ to leave her old job.", "If you're ⟦reluctant⟧ to decide now, take the weekend.", "Why are you so ⟦reluctant⟧ to try it?"], "inYourText": {"quote": "A few players were reluctant at first", "explanation": "Some players did not want to train at the beginning."}}`;
 
 export type TermToExplain = { position: number; surface: string; headword: string };
 

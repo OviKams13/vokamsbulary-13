@@ -2,10 +2,11 @@ import "server-only";
 
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
-import { db, explanations, posts, terms } from "@/db";
+import { db, explanations, posts, termExamples, terms } from "@/db";
 import { appearsIn } from "@/lib/verify";
 
 import { explainTerms, type TermExplanation } from "./explain";
+import { validExamples } from "./examples";
 
 /**
  * Runs the explanation call (7.8) for one verified draft, in the background
@@ -53,17 +54,22 @@ export async function runExplanation(postId: string): Promise<void> {
     const rows = termRows.map((term) =>
       toRow(term, post.text ?? "", byPosition.get(term.position)!, model),
     );
+    // 13.2: a term whose examples didn't come back right simply has none yet;
+    // they are written the first time its examples view is opened.
+    const exampleRows = termRows.flatMap((term) => {
+      const sentences = validExamples(byPosition.get(term.position)?.examples);
+      return sentences ? [{ termId: term.id, language: "en" as const, sentences, model }] : [];
+    });
+    const termIds = termRows.map((term) => term.id);
     await db.batch([
-      db.delete(explanations).where(
-        and(
-          inArray(
-            explanations.termId,
-            termRows.map((term) => term.id),
-          ),
-          eq(explanations.language, "en"),
-        ),
-      ),
+      db
+        .delete(explanations)
+        .where(and(inArray(explanations.termId, termIds), eq(explanations.language, "en"))),
+      db
+        .delete(termExamples)
+        .where(and(inArray(termExamples.termId, termIds), eq(termExamples.language, "en"))),
       db.insert(explanations).values(rows),
+      ...(exampleRows.length > 0 ? [db.insert(termExamples).values(exampleRows)] : []),
       db
         .update(posts)
         .set({ status: "explained", lastError: null, updatedAt: new Date() })
