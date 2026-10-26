@@ -33,7 +33,9 @@ type ExplanationPanelProps = {
  *
  * Which words are in French is kept in the page's translation state, so the
  * post card can show the French post text (8.3) while this word is on screen
- * in French. The first Translate of the post also brings that French text.
+ * in French. The first Translate of the post also brings that French text,
+ * with the French words of each term marked (8.4). A post translated before
+ * that has its text regenerated on its next Translate, once.
  */
 export function ExplanationPanel({
   termId,
@@ -53,7 +55,8 @@ export function ExplanationPanel({
   function toggle() {
     setError(null);
     if (showFrench) return setShowFrench(false);
-    if (french) return setShowFrench(true);
+    // A word translated before 8.4 still asks once if the post's French text has no marks yet.
+    if (french && !translation?.textNeedsRefresh) return setShowFrench(true);
 
     startTranslating(async () => {
       let result: Awaited<ReturnType<typeof translateAction>>;
@@ -64,7 +67,7 @@ export function ExplanationPanel({
       }
       if (result.ok) {
         setFrench(result.explanation);
-        if (result.textFr) translation?.setTextFr(result.textFr);
+        translation?.receiveTextFr(result.textFr);
         setShowFrench(true);
       } else {
         setError(result.error);
