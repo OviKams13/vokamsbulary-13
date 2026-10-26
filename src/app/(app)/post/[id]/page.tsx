@@ -98,6 +98,8 @@ export default async function PostPage({ params, searchParams }: PageProps<"/pos
                     surface={term.surface}
                     english={term.explanation}
                     french={term.french}
+                    examples={term.examples}
+                    examplesFr={term.examplesFr}
                   />
                 ))}
                 initial={selected}

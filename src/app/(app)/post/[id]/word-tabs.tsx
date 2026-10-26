@@ -100,7 +100,7 @@ export function WordTabs({ labels, panels, initial }: WordTabsProps) {
           id={`${id}-panel-${index + 1}`}
           aria-labelledby={`${id}-tab-${index + 1}`}
           hidden={index + 1 !== selected}
-          className="mt-4 rounded-[1.375rem] border border-line bg-surface px-4.5 py-6 sm:mt-5 sm:rounded-3xl sm:px-8 sm:py-8"
+          className="mt-4 sm:mt-5"
         >
           {panel}
         </div>

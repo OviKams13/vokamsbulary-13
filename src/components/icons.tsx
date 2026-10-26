@@ -65,6 +65,16 @@ export function ListIcon(props: IconProps) {
   );
 }
 
+/** Numbered list "1 / 2": the usage examples (13.3). */
+export function NumberedListIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M10.5 6.5H21M10.5 17.5H21" />
+      <path d="M3.5 4.8L5 4v6M3.2 20h3.6M3.4 14.2c.2-.8.8-1.2 1.6-1.2 1 0 1.7.6 1.7 1.4 0 1.5-1.8 2.3-3.3 3.6" />
+    </Icon>
+  );
+}
+
 export function CheckIcon(props: IconProps) {
   return (
     <Icon {...props}>
