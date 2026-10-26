@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { getOrCreateExamples, getOrCreateExamplesFrench } from "@/ai/examples-term";
 import { getOrCreateFrench } from "@/ai/translate-term";
 import { type DeletedPost, deletePost } from "@/db/delete-post";
 import type { Explanation } from "@/db/schema";
@@ -71,6 +72,53 @@ export async function translateAction(termId: string): Promise<TranslateState> {
     };
   } catch (error) {
     console.error("Translate failed:", error instanceof Error ? error.message : error);
+    return { ok: false, error: "The translation failed. Try again." };
+  }
+}
+
+export type ExamplesState = { ok: true; sentences: string[] } | { ok: false; error: string };
+
+/**
+ * Usage examples (13.2) of one term, for a post published before them: the
+ * first time the examples view of a word without examples is opened they are
+ * generated and stored (Claude call); afterwards they are read from the
+ * database (D-09).
+ */
+export async function examplesAction(termId: string): Promise<ExamplesState> {
+  if (!(await hasAccess())) return { ok: false, error: "Access code required." };
+  if (!isPostId(termId)) return { ok: false, error: "This word doesn't exist." };
+
+  try {
+    const result = await getOrCreateExamples(termId);
+    if (result.ok) return result;
+    return { ok: false, error: "This word doesn't exist anymore." };
+  } catch (error) {
+    console.error("Examples failed:", error instanceof Error ? error.message : error);
+    return { ok: false, error: "The examples couldn't be written. Try again." };
+  }
+}
+
+/**
+ * Translate, in the examples view (13.2): the French version of the 5
+ * examples. The first click generates and stores it (Claude call); afterwards
+ * it is read from the database, so no call is made (D-09).
+ */
+export async function translateExamplesAction(termId: string): Promise<ExamplesState> {
+  if (!(await hasAccess())) return { ok: false, error: "Access code required." };
+  if (!isPostId(termId)) return { ok: false, error: "This word doesn't exist." };
+
+  try {
+    const result = await getOrCreateExamplesFrench(termId);
+    if (result.ok) return result;
+    return {
+      ok: false,
+      error:
+        result.reason === "missing"
+          ? "This word doesn't exist anymore."
+          : "This word has no examples to translate.",
+    };
+  } catch (error) {
+    console.error("Translate examples failed:", error instanceof Error ? error.message : error);
     return { ok: false, error: "The translation failed. Try again." };
   }
 }

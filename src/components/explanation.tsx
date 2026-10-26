@@ -5,7 +5,6 @@ import type { Explanation as ExplanationRow } from "@/db/schema";
 import { capitalize } from "@/lib/text";
 
 type ExplanationProps = {
-  headword: string;
   /** The term as written in the post, highlighted in the quote. */
   surface: string;
   /** The English row, or the French one after Translate (8.2). Null: none yet. */
@@ -13,28 +12,53 @@ type ExplanationProps = {
 };
 
 /**
- * Explanation of one term (6.3, 8.2, mockups 02-D / 02-M): headword +
- * French flag + French equivalents, definition, analogy card, yellow example
- * question, and "In your text" (the quote with the term highlighted, then what
- * it means there).
+ * The top of a word's panel (6.3, 13.3): headword + French flag + French
+ * equivalents, and an optional action on the right (the examples toggle).
+ * Shared by the explanation and the usage examples, which swap below it.
+ */
+export function ExplanationHeader({
+  headword,
+  explanation,
+  action,
+}: {
+  headword: string;
+  explanation: ExplanationRow | null;
+  action?: ReactNode;
+}) {
+  const title = capitalize(headword);
+
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+        <h2 className="flex items-center gap-3.5 text-[1.75rem] leading-tight font-extrabold tracking-tight sm:text-4xl">
+          {title}
+          {explanation ? <FrenchFlag /> : null}
+        </h2>
+        {explanation ? (
+          <p lang="fr" className="text-[0.9375rem] text-fg-soft sm:pt-1.5 sm:text-[1.0625rem]">
+            <span className="sr-only">In French: </span>
+            {explanation.frEquivalents.join(" / ")}
+          </p>
+        ) : null}
+      </div>
+      {action}
+    </div>
+  );
+}
+
+/**
+ * Explanation of one term (6.3, 8.2, mockups 02-D / 02-M), under its header:
+ * definition, analogy card, yellow example question, and "In your text" (the
+ * quote with the term highlighted, then what it means there).
  *
  * The same layout shows the English or the French version. In French, the
  * example question and the quote stay in English (E-03), and the question's
  * French translation is shown under it. Section labels stay in English, like
  * the rest of the interface.
  */
-export function Explanation({ headword, surface, explanation }: ExplanationProps) {
-  const title = capitalize(headword);
-
+export function Explanation({ surface, explanation }: ExplanationProps) {
   if (!explanation) {
-    return (
-      <>
-        <h2 className="text-[1.75rem] leading-tight font-extrabold tracking-tight sm:text-4xl">
-          {title}
-        </h2>
-        <p className="mt-4 text-fg-soft">No explanation for this word yet.</p>
-      </>
-    );
+    return <p className="mt-4 text-fg-soft">No explanation for this word yet.</p>;
   }
 
   const french = explanation.language === "fr";
@@ -43,17 +67,6 @@ export function Explanation({ headword, surface, explanation }: ExplanationProps
 
   return (
     <>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-        <h2 className="flex items-center gap-3.5 text-[1.75rem] leading-tight font-extrabold tracking-tight sm:text-4xl">
-          {title}
-          <FrenchFlag />
-        </h2>
-        <p lang="fr" className="text-[0.9375rem] text-fg-soft sm:pt-1.5 sm:text-[1.0625rem]">
-          <span className="sr-only">In French: </span>
-          {explanation.frEquivalents.join(" / ")}
-        </p>
-      </div>
-
       <Section label="Definition">
         <p lang={lang} className="leading-relaxed text-fg sm:text-[1.0625rem]">
           {explanation.definition}
@@ -130,7 +143,7 @@ function Section({ label, children }: { label: string; children: ReactNode }) {
 }
 
 /** 🇫🇷 drawn in SVG: Windows shows the flag emoji as the letters "FR". */
-function FrenchFlag({ className = "" }: { className?: string }) {
+export function FrenchFlag({ className = "" }: { className?: string }) {
   return (
     <svg
       role="img"
