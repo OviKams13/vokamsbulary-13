@@ -13,6 +13,19 @@ const nextConfig: NextConfig = {
     // A cold dev start costs a few seconds on this app; builds keep their cache.
     turbopackFileSystemCacheForDev: false,
   },
+  async headers() {
+    return [
+      {
+        // The service worker (14.1): always checked again, so a new version is
+        // picked up on the next visit (Next.js PWA guide).
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+        ],
+      },
+    ];
+  },
   turbopack: {
     rules: {
       "*.css": {
