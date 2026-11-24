@@ -1,6 +1,20 @@
 import type { NextConfig } from "next";
 
+/**
+ * Version of the service worker (14.1): one per deployment, so each deployment
+ * registers `/sw.js?v=<version>` and the browser installs a new worker that
+ * stores that deployment's offline app. Vercel gives the deployment id at
+ * build time; elsewhere (local `next build`) a build timestamp, kept in the
+ * environment so every build worker reads the same value.
+ */
+const swVersion =
+  process.env.VERCEL_DEPLOYMENT_ID ??
+  (process.env.VK13_SW_VERSION ??= `local-${Date.now().toString(36)}`);
+
 const nextConfig: NextConfig = {
+  env: {
+    NEXT_PUBLIC_SW_VERSION: swVersion,
+  },
   experimental: {
     serverActions: {
       // The upload Server Action (7.1) receives the resized screenshot: up to
