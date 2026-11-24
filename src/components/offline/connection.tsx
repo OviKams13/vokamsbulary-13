@@ -12,7 +12,7 @@ import {
   useSyncExternalStore,
 } from "react";
 
-import { refreshOfflineShell, registerServiceWorker } from "@/lib/offline/service-worker";
+import { registerServiceWorker } from "@/lib/offline/service-worker";
 import { syncOfflineCopy } from "@/lib/offline/store";
 
 /**
@@ -24,9 +24,10 @@ import { syncOfflineCopy } from "@/lib/offline/store";
  *   worker from the copy on the device), not a page from the server.
  *
  * The provider also keeps the offline copy fresh (14.2): it registers the
- * service worker, and downloads the copy and the offline app again when the
- * app opens online, when the connection comes back, when the app comes back
- * to the screen and on navigations (at most every 30 s for those two).
+ * service worker (which stores the offline app itself, once per deployment),
+ * and downloads the copy of the posts again when the app opens online, when
+ * the connection comes back, when the app comes back to the screen and on
+ * navigations (at most every 30 s for those two).
  */
 
 type Connection = {
@@ -98,8 +99,7 @@ export function ConnectionProvider({
     if (!navigator.onLine) return;
     if (!force && Date.now() - lastRefresh.current < REFRESH_EVERY_MS) return;
     lastRefresh.current = Date.now();
-    // The app files only after the server confirmed the access (never after a 401 wipe).
-    void syncOfflineCopy().then((allowed) => (allowed ? refreshOfflineShell() : undefined));
+    void syncOfflineCopy();
   }, []);
 
   // Opening the app: register the worker, then refresh the copy.
