@@ -14,6 +14,7 @@ export function ExamplesView({
   showFrench,
   generating,
   error,
+  blocked = null,
   onRetry,
 }: {
   english: string[] | null;
@@ -22,6 +23,8 @@ export function ExamplesView({
   /** The examples of an older post are being written (first opening only). */
   generating: boolean;
   error: string | null;
+  /** The examples must be written by the server and there is no connection (14.3). */
+  blocked?: string | null;
   onRetry: () => void;
 }) {
   const translations = showFrench ? french : null;
@@ -61,6 +64,10 @@ export function ExamplesView({
             </li>
           ))}
         </ol>
+      ) : blocked && !generating ? (
+        <p role="status" className="py-6 text-fg-soft">
+          {blocked}
+        </p>
       ) : error ? (
         <div className="py-5">
           <p role="alert" className="text-sm font-medium text-red-400">

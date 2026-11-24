@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import { HighlightedText } from "@/components/highlighted-text";
-import type { Explanation as ExplanationRow } from "@/db/schema";
+import type { ExplanationContent as ExplanationRow } from "@/lib/explanation";
 import { capitalize } from "@/lib/text";
 
 type ExplanationProps = {

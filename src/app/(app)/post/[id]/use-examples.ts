@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+
+import { useNetworkAction } from "@/components/offline/connection";
 
 import { examplesAction, translateExamplesAction } from "./actions";
 
@@ -15,6 +17,10 @@ import { examplesAction, translateExamplesAction } from "./actions";
  * translates and stores them once; later clicks only switch what is shown,
  * with no request (D-09). Neither is asked again after a reload: both are in
  * the page data.
+ *
+ * Offline (14.3), what needs the server is not asked: `openBlocked` and
+ * `translateBlocked` hold the message to show instead. Examples asked for
+ * while offline are written as soon as the connection is back.
  */
 export function useExamples(
   termId: string,
@@ -27,10 +33,12 @@ export function useExamples(
   const [error, setError] = useState<string | null>(null);
   const [generating, startGenerating] = useTransition();
   const [translating, startTranslating] = useTransition();
+  const writeNetwork = useNetworkAction("Writing the examples");
+  const translateNetwork = useNetworkAction("Translate");
+  // The view was opened while the examples couldn't be written.
+  const waiting = useRef(false);
 
-  function open() {
-    if (english || generating) return;
-    setError(null);
+  function write() {
     startGenerating(async () => {
       const result = await examplesAction(termId).catch(
         () =>
@@ -44,11 +52,27 @@ export function useExamples(
     });
   }
 
+  function open() {
+    if (english || generating) return;
+    setError(null);
+    waiting.current = !writeNetwork.available;
+    if (writeNetwork.available) write();
+  }
+
+  // Back online: write the examples the view is waiting for.
+  const canWrite = writeNetwork.available;
+  useEffect(() => {
+    if (!waiting.current || !canWrite) return;
+    waiting.current = false;
+    write();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the connection comes back
+  }, [canWrite]);
+
   function toggleFrench() {
     setError(null);
     if (showFrench) return setShowFrench(false);
     if (french) return setShowFrench(true);
-    if (!english) return;
+    if (!english || !translateNetwork.available) return;
 
     startTranslating(async () => {
       const result = await translateExamplesAction(termId).catch(
@@ -68,6 +92,8 @@ export function useExamples(
     french,
     showFrench,
     error,
+    openBlocked: english ? null : writeNetwork.reason,
+    translateBlocked: english && !french ? translateNetwork.reason : null,
     generating,
     translating,
     open,

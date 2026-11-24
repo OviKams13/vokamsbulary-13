@@ -4,7 +4,8 @@ import { type TouchEvent, useRef, useState, useTransition } from "react";
 
 import { Explanation, ExplanationHeader } from "@/components/explanation";
 import { NumberedListIcon } from "@/components/icons";
-import type { Explanation as ExplanationRow } from "@/db/schema";
+import { useNetworkAction } from "@/components/offline/connection";
+import type { ExplanationContent as ExplanationRow } from "@/lib/explanation";
 
 import { translateAction } from "./actions";
 import { ExamplesView } from "./examples-view";
@@ -74,6 +75,8 @@ export function ExplanationPanel({
   const setShowFrench = (shown: boolean) => translation?.setFrench(position, shown);
   const [error, setError] = useState<string | null>(null);
   const [translating, startTranslating] = useTransition();
+  // A first Translate needs the server; switching to a stored French version doesn't (14.3).
+  const network = useNetworkAction("Translate");
 
   const [view, setView] = useState<View>("explanation");
   const examples = useExamples(termId, initialExamples, initialExamplesFr);
@@ -106,7 +109,11 @@ export function ExplanationPanel({
     setError(null);
     if (showFrench) return setShowFrench(false);
     // A word translated before 8.4 still asks once if the post's French text has no marks yet.
-    if (french && !translation?.textNeedsRefresh) return setShowFrench(true);
+    // Offline, a word already translated still switches (its old French text stays as it is).
+    if (french && (!translation?.textNeedsRefresh || !network.available)) {
+      return setShowFrench(true);
+    }
+    if (!network.available) return;
 
     startTranslating(async () => {
       let result: Awaited<ReturnType<typeof translateAction>>;
@@ -169,6 +176,7 @@ export function ExplanationPanel({
               showFrench={showFrench}
               translating={translating}
               error={error}
+              blocked={french ? null : network.reason}
               onToggle={toggle}
             />
           ) : null}
@@ -182,6 +190,7 @@ export function ExplanationPanel({
               showFrench={examples.showFrench}
               generating={examples.generating}
               error={examples.english ? null : examples.error}
+              blocked={examples.openBlocked}
               onRetry={examples.open}
             />
             {examples.english ? (
@@ -189,6 +198,7 @@ export function ExplanationPanel({
                 showFrench={examples.showFrench}
                 translating={examples.translating}
                 error={examples.error}
+                blocked={examples.translateBlocked}
                 onToggle={examples.toggleFrench}
                 compact
               />
