@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useId, useRef, useState } from "react";
 
 import { MoreIcon, TrashIcon } from "@/components/icons";
+import { useNetworkAction } from "@/components/offline/connection";
 
 import { type DeleteState, deletePostAction } from "./actions";
 
@@ -26,6 +27,8 @@ export function PostMenu({ postId, label, wordCount }: PostMenuProps) {
   const confirm = useRef<HTMLDialogElement>(null);
   const [state, formAction, pending] = useActionState(deletePostAction, initialState);
   const titleId = useId();
+  // Deleting needs the server (14.3): offline, the item is disabled with the reason under it.
+  const network = useNetworkAction("Deleting");
 
   // Close the menu on a click outside it or on Escape.
   useEffect(() => {
@@ -72,12 +75,18 @@ export function PostMenu({ postId, label, wordCount }: PostMenuProps) {
             type="button"
             role="menuitem"
             autoFocus
+            disabled={!network.available}
             onClick={openConfirm}
-            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[0.9375rem] font-semibold text-red-400 transition hover:bg-surface-3 focus-visible:bg-surface-3"
+            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[0.9375rem] font-semibold text-red-400 transition focus-visible:bg-surface-3 enabled:hover:bg-surface-3 disabled:opacity-45"
           >
             <TrashIcon size={18} />
             Delete post
           </button>
+          {network.reason ? (
+            <p className="px-3 pt-0.5 pb-2 text-[0.8125rem] leading-snug text-muted">
+              {network.reason}
+            </p>
+          ) : null}
         </div>
       ) : null}
 
@@ -100,6 +109,10 @@ export function PostMenu({ postId, label, wordCount }: PostMenuProps) {
             <p role="alert" className="mb-4 text-sm font-medium text-red-400">
               {state.error}
             </p>
+          ) : network.reason ? (
+            <p role="status" className="mb-4 text-sm text-muted">
+              {network.reason}
+            </p>
           ) : null}
           <div className="flex justify-end gap-2.5">
             <button
@@ -113,7 +126,7 @@ export function PostMenu({ postId, label, wordCount }: PostMenuProps) {
             </button>
             <button
               type="submit"
-              disabled={pending}
+              disabled={pending || !network.available}
               className="flex h-11 items-center gap-2 rounded-full bg-red-500 px-5 font-semibold text-white transition hover:bg-red-400 disabled:opacity-70"
             >
               <TrashIcon size={17} />

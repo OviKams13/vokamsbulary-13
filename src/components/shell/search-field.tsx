@@ -1,9 +1,10 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 
 import { CloseIcon, SearchIcon } from "@/components/icons";
+import { useAppRouter } from "@/components/offline/navigation";
 import { routes } from "@/lib/routes";
 import { normalizeQuery } from "@/lib/search";
 
@@ -24,7 +25,7 @@ type SearchFieldProps = {
  * you leave it.
  */
 export function SearchField({ variant, autoFocus = false }: SearchFieldProps) {
-  const router = useRouter();
+  const router = useAppRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const input = useRef<HTMLInputElement>(null);

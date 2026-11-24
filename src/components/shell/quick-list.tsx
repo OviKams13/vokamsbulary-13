@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+
 import {
   type KeyboardEvent,
   type Ref,
@@ -16,7 +16,10 @@ import {
 import { createPortal } from "react-dom";
 
 import { CloseIcon } from "@/components/icons";
+import { useAppRouter } from "@/components/offline/navigation";
 import { TotwBadge } from "@/components/totw-badge";
+import { quickListFromCopy } from "@/lib/offline/derive";
+import { readCopy } from "@/lib/offline/store";
 import { routes } from "@/lib/routes";
 import { type QuickListItem, TOTW_SIZE, type TotwSummary } from "@/lib/totw";
 
@@ -50,15 +53,38 @@ function setEntry(number: number, entry: Entry) {
   for (const listener of listeners) listener();
 }
 
+/** In the offline app, lists come from the copy on the device only (14.2). */
+let copyOnly = false;
+
+export function readQuickListsFromCopy() {
+  copyOnly = true;
+}
+
+async function listFromCopy(number: number): Promise<QuickListItem[]> {
+  const copy = await readCopy();
+  if (!copy) throw new Error("No offline copy");
+  return quickListFromCopy(copy, number);
+}
+
+async function listFromServer(number: number): Promise<QuickListItem[]> {
+  let response: Response;
+  try {
+    response = await fetch(routes.totwQuickList(number), { cache: "no-store" });
+  } catch {
+    // No network (14.2): the copy on the device has the same list.
+    return listFromCopy(number);
+  }
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return ((await response.json()) as { items: QuickListItem[] }).items;
+}
+
 /** Reads a TOTW's quick list, unless a read started less than 5 s ago. */
 export function loadQuickList(number: number) {
   const previous = entries.get(number);
   if (previous?.request && Date.now() - previous.requestedAt < REUSE_MS) return;
 
-  const request = fetch(routes.totwQuickList(number), { cache: "no-store" })
-    .then(async (response) => {
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const { items } = (await response.json()) as { items: QuickListItem[] };
+  const request = (copyOnly ? listFromCopy(number) : listFromServer(number))
+    .then((items) => {
       setEntry(number, { items, failed: false, request, requestedAt: Date.now() });
     })
     .catch(() => {
@@ -366,7 +392,7 @@ export function QuickListSheet({ totw, ref, onClose, onFollow }: SheetProps) {
   const entry = useQuickList(totw.number);
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
-  const router = useRouter();
+  const router = useAppRouter();
   const [activePosition, setActivePosition] = useState<number | null>(null);
 
   // Unmounting removes the dialog, which closes it: no cleanup needed.

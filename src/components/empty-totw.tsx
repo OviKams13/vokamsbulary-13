@@ -1,7 +1,7 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { UploadIcon } from "@/components/icons";
+import { NetworkLink } from "@/components/offline/network-link";
 import { routes } from "@/lib/routes";
 import { TOTW_SIZE } from "@/lib/totw";
 
@@ -26,13 +26,14 @@ export function EmptyTotw({ number }: { number: number }) {
         {Array.from({ length: TOTW_SIZE }, (_, index) =>
           index === 0 ? (
             <li key={index}>
-              <Link
+              <NetworkLink
                 href={routes.newPost}
+                action="New post"
                 aria-label="Upload a screenshot into spot 1"
                 className="grid h-15 w-12.5 place-items-center rounded-xl border-[1.5px] border-dashed border-gold bg-gold/6 font-display text-base font-extrabold text-gold transition hover:bg-gold/12 lg:h-21 lg:w-17.5 lg:rounded-2xl"
               >
                 +
-              </Link>
+              </NetworkLink>
             </li>
           ) : (
             <li
@@ -58,13 +59,14 @@ export function EmptyTotw({ number }: { number: number }) {
         takes one of them.
       </p>
 
-      <Link
+      <NetworkLink
         href={routes.newPost}
+        action="New post"
         className="mt-7 flex h-13 w-full items-center justify-center gap-2.5 rounded-full bg-fg px-8 font-semibold text-bg transition hover:bg-white lg:mt-8 lg:w-auto"
       >
         <UploadIcon size={19} className="hidden lg:block" />
         {first ? "Upload your first screenshot" : "Upload a screenshot"}
-      </Link>
+      </NetworkLink>
 
       <ol className="mt-8 hidden w-160 grid-cols-3 gap-3 text-left lg:grid">
         <Step number={1}>

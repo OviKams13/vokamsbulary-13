@@ -1,8 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
 import { ArrowLeftIcon } from "@/components/icons";
+import { useAppRouter } from "@/components/offline/navigation";
 import { routes } from "@/lib/routes";
 
 /**
@@ -10,7 +9,7 @@ import { routes } from "@/lib/routes";
  * from (feed, post), or the home page when search was opened directly.
  */
 export function BackButton() {
-  const router = useRouter();
+  const router = useAppRouter();
 
   return (
     <button

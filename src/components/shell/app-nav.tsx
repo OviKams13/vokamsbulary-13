@@ -3,6 +3,7 @@ import { type ReactNode, Suspense } from "react";
 
 import { BrandLogo } from "@/components/brand-logo";
 import { PlusIcon, SearchIcon } from "@/components/icons";
+import { NetworkLink } from "@/components/offline/network-link";
 import type { TotwOverview } from "@/db/totw";
 import { routes } from "@/lib/routes";
 
@@ -50,13 +51,14 @@ export function AppNav({ overview, variant, action }: AppNavProps) {
         </div>
       )}
 
-      <Link
+      <NetworkLink
         href={routes.newPost}
+        action="New post"
         className="mt-[1.125rem] flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-fg font-semibold text-bg transition hover:bg-white"
       >
         <PlusIcon size={18} />
         New post
-      </Link>
+      </NetworkLink>
 
       <h2 className="mt-7 text-xs font-semibold tracking-[0.12em] text-muted uppercase">
         Team of the week
