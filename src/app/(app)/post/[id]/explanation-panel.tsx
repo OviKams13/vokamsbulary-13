@@ -5,6 +5,7 @@ import { type TouchEvent, useRef, useState, useTransition } from "react";
 import { Explanation, ExplanationHeader } from "@/components/explanation";
 import { NumberedListIcon } from "@/components/icons";
 import { useNetworkAction } from "@/components/offline/connection";
+import { DefinitionText, HighlightToggle } from "@/components/review/definition-text";
 import type { ExplanationContent as ExplanationRow } from "@/lib/explanation";
 
 import { translateAction } from "./actions";
@@ -58,6 +59,10 @@ const SWIPE_MIN_PX = 48;
  *
  * Both views stay mounted (the other is hidden), so a word keeps what it shows
  * when you switch views or tabs.
+ *
+ * The pencil next to "Definition" (15.1) switches highlight mode for the
+ * definition on screen (English or French, each with its own highlights).
+ * Highlights need no connection: they are saved on the device and sent later.
  */
 export function ExplanationPanel({
   termId,
@@ -77,6 +82,10 @@ export function ExplanationPanel({
   const [translating, startTranslating] = useTransition();
   // A first Translate needs the server; switching to a stored French version doesn't (14.3).
   const network = useNetworkAction("Translate");
+
+  // Highlight mode of the definition (15.1): the pencil next to "Definition".
+  const [highlighting, setHighlighting] = useState(false);
+  const shown = showFrench ? french : english;
 
   const [view, setView] = useState<View>("explanation");
   const examples = useExamples(termId, initialExamples, initialExamplesFr);
@@ -169,7 +178,40 @@ export function ExplanationPanel({
         />
 
         <div hidden={examplesOpen}>
-          <Explanation surface={surface} explanation={showFrench ? french : english} />
+          <Explanation
+            surface={surface}
+            explanation={shown}
+            definition={
+              shown ? (
+                <DefinitionText
+                  // English and French each keep their own highlights.
+                  key={shown.language}
+                  termId={termId}
+                  language={shown.language}
+                  definition={shown.definition}
+                  marks={shown.definitionMarks ?? []}
+                  changedAt={shown.definitionMarksChangedAt ?? null}
+                  editing={highlighting}
+                />
+              ) : null
+            }
+            definitionAction={
+              shown ? (
+                <HighlightToggle
+                  active={highlighting}
+                  onToggle={() => setHighlighting((value) => !value)}
+                />
+              ) : null
+            }
+            definitionNote={
+              shown && highlighting ? (
+                <p className="mt-2.5 text-[0.8125rem] leading-snug text-muted">
+                  Tap a word to highlight it. Tap the space between two highlighted words to join
+                  them.
+                </p>
+              ) : null
+            }
+          />
 
           {english ? (
             <TranslateBar

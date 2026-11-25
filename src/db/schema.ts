@@ -22,6 +22,9 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+// Relative path: drizzle-kit loads this file without the `@/` alias.
+import { REVIEW_COLORS } from "../lib/review";
+
 // ---------------------------------------------------------------------------
 // Enums (ERD §2)
 // ---------------------------------------------------------------------------
@@ -37,6 +40,12 @@ export const postStatus = pgEnum("post_status", [
 export const explanationLanguage = pgEnum("explanation_language", ["en", "fr"]);
 
 export const aiCallKind = pgEnum("ai_call_kind", ["extract", "explain", "translate", "examples"]);
+
+/**
+ * Review colour of a post (15.2): green = understood every word, orange =
+ * understood some, red = too hard, skipped. No colour (empty circle) is NULL.
+ */
+export const reviewColor = pgEnum("review_color", REVIEW_COLORS);
 
 // ---------------------------------------------------------------------------
 // Tables (ERD §3)
@@ -71,6 +80,15 @@ export const posts = pgTable(
     publishedAt: timestamp("published_at", { withTimezone: true }),
     /** Last processing error (Claude or Blob), shown with a Retry button. */
     lastError: text("last_error"),
+    /** Review colour chosen by the user (15.2); null = empty circle. */
+    reviewColor: reviewColor("review_color"),
+    /**
+     * When the review colour was last changed, by the clock of the device that
+     * changed it (never later than the server's). A change is kept only if it
+     * is newer than this one: last change wins, also for changes sent late
+     * from an offline device. Null = never changed.
+     */
+    reviewChangedAt: timestamp("review_changed_at", { withTimezone: true }),
     createdAt: createdAt(),
     /** Set by the app on every update. */
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -143,6 +161,17 @@ export const explanations = pgTable(
     inYourTextExplanation: text("in_your_text_explanation").notNull(),
     /** Model id that produced it. */
     model: text("model").notNull(),
+    /**
+     * The user's own highlights in `definition` (15.1), as unit numbers: word
+     * i (the definition split on spaces) is 2i, the space after it is 2i + 1.
+     * Sorted, no repeats; a space is only there with both of its words.
+     */
+    definitionMarks: smallint("definition_marks")
+      .array()
+      .notNull()
+      .default(sql`'{}'::smallint[]`),
+    /** When the highlights were last changed (same rule as `posts.review_changed_at`). */
+    definitionMarksChangedAt: timestamp("definition_marks_changed_at", { withTimezone: true }),
     createdAt: createdAt(),
   },
   (t) => [unique("explanations_term_id_language_key").on(t.termId, t.language)],

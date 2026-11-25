@@ -29,6 +29,13 @@
       "when": 1793013050709,
       "tag": "0003_add_term_examples",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795564181951,
+      "tag": "0004_add_review_tools",
+      "breakpoints": true
     }
   ]
 }

@@ -1,8 +1,10 @@
 import Link from "next/link";
 
 import { ArrowLeftIcon } from "@/components/icons";
+import { ReviewCircle } from "@/components/review/review-circle";
 import { ThemedPost } from "@/components/themed-post";
 import type { CopyTerm } from "@/lib/offline/copy";
+import type { ReviewColor } from "@/lib/review";
 import { routes } from "@/lib/routes";
 import { capitalize } from "@/lib/text";
 
@@ -19,6 +21,9 @@ export type PostDetailData = {
   themeKey: string;
   totwNumber: number;
   position: number;
+  /** Review colour (15.2); absent in a copy saved before Phase 15. */
+  reviewColor?: ReviewColor | null;
+  reviewChangedAt?: number | null;
   terms: CopyTerm[];
 };
 
@@ -43,6 +48,16 @@ export function PostDetailView({
   const back = post.totwNumber === currentTotw ? routes.home : routes.totw(post.totwNumber);
   const label = `TOTW ${post.totwNumber} · #${post.position}`;
   const menu = <PostMenu postId={post.id} label={label} wordCount={post.terms.length} />;
+  // Review colour (15.2), left of the label: set it right after reading.
+  const review = (
+    <ReviewCircle
+      postId={post.id}
+      color={post.reviewColor ?? null}
+      changedAt={post.reviewChangedAt ?? null}
+      label={label}
+      align="end"
+    />
+  );
 
   return (
     <>
@@ -56,9 +71,12 @@ export function PostDetailView({
           <ArrowLeftIcon size={22} />
         </Link>
         <h1 className="text-[1.0625rem] font-bold">Post</h1>
-        <p className="ml-auto font-display text-[0.9375rem] font-extrabold tracking-wide text-fg-soft">
-          {label}
-        </p>
+        <div className="ml-auto flex items-center gap-0.5">
+          {review}
+          <p className="font-display text-[0.9375rem] font-extrabold tracking-wide text-fg-soft">
+            {label}
+          </p>
+        </div>
         <div className="-mr-2">{menu}</div>
       </header>
 
@@ -71,8 +89,13 @@ export function PostDetailView({
             <ArrowLeftIcon size={18} />
             Back to TOTW {post.totwNumber}
           </Link>
-          <h1 className="sr-only">{label}</h1>
-          {menu}
+          <div className="flex items-center gap-1">
+            {review}
+            <h1 className="mr-1 font-display text-[0.9375rem] font-extrabold tracking-wide text-fg-soft">
+              {label}
+            </h1>
+            {menu}
+          </div>
         </div>
 
         <PostTranslationProvider initialTextFr={post.textFr} initialSelected={selected}>

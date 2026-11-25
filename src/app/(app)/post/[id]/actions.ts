@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { getOrCreateExamples, getOrCreateExamplesFrench } from "@/ai/examples-term";
 import { getOrCreateFrench } from "@/ai/translate-term";
 import { type DeletedPost, deletePost } from "@/db/delete-post";
-import type { Explanation } from "@/db/schema";
+import { type ExplanationContent, toExplanationContent } from "@/lib/explanation";
 import { isPostId } from "@/db/post-detail";
 import { getTotwOverview } from "@/db/totw";
 import { hasAccess } from "@/lib/access";
@@ -48,7 +48,8 @@ export async function deletePostAction(
 }
 
 export type TranslateState =
-  { ok: true; explanation: Explanation; textFr: string | null } | { ok: false; error: string };
+  | { ok: true; explanation: ExplanationContent; textFr: string | null }
+  | { ok: false; error: string };
 
 /**
  * Translate (8.2): the French explanation of one term. The first click
@@ -62,7 +63,10 @@ export async function translateAction(termId: string): Promise<TranslateState> {
 
   try {
     const result = await getOrCreateFrench(termId);
-    if (result.ok) return { ok: true, explanation: result.explanation, textFr: result.textFr };
+    if (result.ok) {
+      const explanation = toExplanationContent(result.explanation)!;
+      return { ok: true, explanation, textFr: result.textFr };
+    }
     return {
       ok: false,
       error:

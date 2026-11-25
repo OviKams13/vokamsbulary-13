@@ -47,6 +47,8 @@ export function quickListFromCopy(copy: OfflineCopy, totwNumber: number): QuickL
       position: post.position,
       postId: post.id,
       headwords: [...new Set(post.terms.map((term) => term.headword))],
+      reviewColor: post.reviewColor ?? null,
+      reviewChangedAt: post.reviewChangedAt ?? null,
     }));
 }
 

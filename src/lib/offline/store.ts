@@ -1,4 +1,7 @@
+import type { ReviewChange, ReviewResult } from "@/lib/review";
+
 import { COPY_FORMAT, type OfflineCopy } from "./copy";
+import { applyReviewToCopy, readPending } from "./review-queue";
 import { askServiceWorker, unregisterServiceWorker } from "./service-worker";
 
 /**
@@ -112,9 +115,39 @@ async function runSync(): Promise<boolean> {
     savedAt: new Date().toISOString(),
     copy,
   };
-  await writeRecord(record).catch(() => undefined);
+  await exclusive(async () => {
+    // Review changes not sent yet stay on top of the new copy (Phase 15).
+    applyReviewToCopy(copy, await readPending().catch(() => []));
+    await writeRecord(record).catch(() => undefined);
+  });
   setState({ status: "ready", copy, savedAt: record.savedAt });
   return true;
+}
+
+/**
+ * Applies review changes (Phase 15) to the copy saved on the device, so the
+ * offline app shows them, even after the app was closed: a change made on
+ * this device, then the server's answer once it is sent. Does nothing
+ * without a copy. Never throws.
+ */
+export async function applyReviewToSavedCopy(
+  changes: readonly (ReviewChange | ReviewResult)[],
+): Promise<void> {
+  await exclusive(async () => {
+    const record = await readRecord();
+    if (!record || !applyReviewToCopy(record.copy, changes)) return;
+    await writeRecord(record);
+    setState({ status: "ready", copy: record.copy, savedAt: record.savedAt });
+  }).catch(() => undefined);
+}
+
+/** Read-change-write of the saved record, one at a time (a download and a review change). */
+let writes: Promise<unknown> = Promise.resolve();
+
+function exclusive<T>(task: () => Promise<T>): Promise<T> {
+  const result = writes.then(task, task);
+  writes = result.catch(() => undefined);
+  return result;
 }
 
 /** Everything offline on this device: the copy, the stored app files, the worker. */
