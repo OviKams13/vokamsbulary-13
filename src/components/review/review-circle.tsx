@@ -1,6 +1,6 @@
 "use client";
 
-import { type KeyboardEvent, useEffect, useId, useRef, useState } from "react";
+import { type KeyboardEvent, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 
 import type { ReviewColor } from "@/lib/review";
 
@@ -25,18 +25,37 @@ function describe(color: ReviewColor | null): string {
   return CHOICES.find((choice) => choice.color === color)!.label;
 }
 
-/** The dot itself: filled with the colour, or an empty grey outline. */
-function Dot({ color, size }: { color: ReviewColor | null; size: number }) {
+/**
+ * The dot itself: filled with the colour, or an empty outline. `light`: a
+ * white / light-grey edge, readable on every post theme (the card chip, 15.3).
+ */
+function Dot({
+  color,
+  size,
+  light = false,
+}: {
+  color: ReviewColor | null;
+  size: number;
+  light?: boolean;
+}) {
+  const edge = light
+    ? color
+      ? `${FILL[color]} border-white/90`
+      : "border-white/80 bg-transparent"
+    : color
+      ? FILL[color]
+      : "border-muted/70 bg-transparent";
   return (
     <span
       aria-hidden="true"
       style={{ width: size, height: size }}
-      className={`block shrink-0 rounded-full border-2 ${
-        color ? FILL[color] : "border-muted/70 bg-transparent"
-      }`}
+      className={`block shrink-0 rounded-full border-2 ${edge}`}
     />
   );
 }
+
+/** Space kept between the choices and the edge of the card or the screen. */
+const EDGE_PX = 6;
 
 type ReviewCircleProps = {
   postId: string;
@@ -51,6 +70,12 @@ type ReviewCircleProps = {
   label: string;
   /** Its position: `relative` by default (the choices are placed from it). */
   className?: string;
+  /**
+   * On a post card (15.3): the circle sits in a small round chip of this
+   * colour (the theme pill's), semi-transparent with a blurred backdrop, and
+   * the dot has a light edge.
+   */
+  chip?: string;
 };
 
 /**
@@ -60,7 +85,10 @@ type ReviewCircleProps = {
  * elsewhere closes them without a change.
  *
  * It is never inside the post's link (a button in a link is invalid HTML and
- * would open the post): the quick list places it over its row.
+ * would open the post): the quick list places it over its row, the feed card
+ * above its link (15.3). The choices open towards `align`, or the other way
+ * when that side would leave the card (`data-review-bounds`) or the screen.
+ * Touches on it never reach a swipe handler around it.
  */
 export function ReviewCircle({
   postId,
@@ -70,12 +98,32 @@ export function ReviewCircle({
   size = "md",
   label,
   className = "relative",
+  chip,
 }: ReviewCircleProps) {
   const [current, setColor] = useReviewColor(postId, { color, changedAt });
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const groupId = useId();
+  const group = useRef<HTMLDivElement>(null);
+  // Kept on screen: before it is painted, the choices move to the other side
+  // when this one leaves the card or the screen. They are created anew at
+  // each opening, so each opening starts from `align` again.
+  useLayoutEffect(() => {
+    const element = group.current;
+    if (!open || !element) return;
+    const box = element.getBoundingClientRect();
+    const bounds = root.current?.closest("[data-review-bounds]")?.getBoundingClientRect();
+    const left = Math.max(bounds?.left ?? 0, 0) + EDGE_PX;
+    const right = Math.min(bounds?.right ?? window.innerWidth, window.innerWidth) - EDGE_PX;
+    if (align === "start" && box.right > right) {
+      element.style.left = "auto";
+      element.style.right = "0";
+    } else if (align === "end" && box.left < left) {
+      element.style.right = "auto";
+      element.style.left = "0";
+    }
+  }, [open, align]);
 
   useEffect(() => {
     if (!open) return;
@@ -120,7 +168,13 @@ export function ReviewCircle({
   const tap = size === "sm" ? "size-8" : "size-10";
 
   return (
-    <div ref={root} className={`shrink-0 ${className}`}>
+    <div
+      ref={root}
+      className={`shrink-0 ${className}`}
+      // Not a swipe of the word card around it (13.3), not a gesture of the page.
+      onTouchStart={(event) => event.stopPropagation()}
+      onTouchEnd={(event) => event.stopPropagation()}
+    >
       <button
         ref={button}
         type="button"
@@ -130,13 +184,26 @@ export function ReviewCircle({
         aria-label={`Review colour of ${label}: ${describe(current.color)}`}
         title={describe(current.color)}
         data-review-color={current.color ?? "none"}
-        className={`grid ${tap} place-items-center rounded-full transition hover:bg-surface-3`}
+        style={
+          chip ? { backgroundColor: `color-mix(in srgb, ${chip} 72%, transparent)` } : undefined
+        }
+        className={
+          chip
+            ? // A 28 px chip (the ribbon's height) with a 40 px touch area.
+              "relative grid size-7 place-items-center rounded-full backdrop-blur-md transition before:absolute before:-inset-1.5 hover:brightness-125"
+            : `grid ${tap} place-items-center rounded-full transition hover:bg-surface-3`
+        }
       >
-        <Dot color={current.color} size={size === "sm" ? 16 : 18} />
+        <Dot
+          color={current.color}
+          size={chip ? 16 : size === "sm" ? 16 : 18}
+          light={Boolean(chip)}
+        />
       </button>
 
       {open ? (
         <div
+          ref={group}
           id={groupId}
           role="group"
           aria-label={`Review colour of ${label}`}

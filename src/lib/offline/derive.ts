@@ -34,6 +34,8 @@ export function feedFromCopy(copy: OfflineCopy, totwNumber: number): FeedPost[] 
       publishedAt: new Date(post.publishedAt),
       totwNumber: post.totwNumber,
       position: post.position,
+      reviewColor: post.reviewColor ?? null,
+      reviewChangedAt: post.reviewChangedAt ?? null,
       terms: post.terms.map(({ surface, headword }) => ({ surface, headword })),
     }));
 }

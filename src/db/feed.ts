@@ -2,6 +2,8 @@ import "server-only";
 
 import { asc, desc, eq } from "drizzle-orm";
 
+import type { ReviewColor } from "@/lib/review";
+
 import { db } from "./index";
 import { postRanks, posts, terms } from "./schema";
 
@@ -14,6 +16,9 @@ export type FeedPost = {
   totwNumber: number;
   /** 1–15 inside its TOTW. */
   position: number;
+  /** Review colour (15.2) and when it was last changed (ms since 1970); shown on the card (15.3). */
+  reviewColor: ReviewColor | null;
+  reviewChangedAt: number | null;
   /** In term order (`terms.position`). */
   terms: { surface: string; headword: string }[];
 };
@@ -31,6 +36,8 @@ export async function getTotwFeed(totwNumber: number): Promise<FeedPost[]> {
         themeKey: posts.themeKey,
         publishedAt: posts.publishedAt,
         position: postRanks.totwPosition,
+        reviewColor: posts.reviewColor,
+        reviewChangedAt: posts.reviewChangedAt,
       })
       .from(postRanks)
       .innerJoin(posts, eq(posts.id, postRanks.postId))
@@ -54,6 +61,8 @@ export async function getTotwFeed(totwNumber: number): Promise<FeedPost[]> {
     publishedAt: row.publishedAt ?? new Date(0),
     totwNumber,
     position: row.position,
+    reviewColor: row.reviewColor,
+    reviewChangedAt: row.reviewChangedAt?.getTime() ?? null,
     terms: (termsByPost.get(row.id) ?? []).map(({ surface, headword }) => ({ surface, headword })),
   }));
 }
