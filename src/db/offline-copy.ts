@@ -3,11 +3,11 @@ import "server-only";
 import { and, asc, eq } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
-import type { ExplanationContent } from "@/lib/explanation";
+import { toExplanationContent as content } from "@/lib/explanation";
 import { COPY_FORMAT, type CopyPost, type OfflineCopy } from "@/lib/offline/copy";
 
 import { db } from "./index";
-import { type Explanation, explanations, postRanks, posts, termExamples, terms } from "./schema";
+import { explanations, postRanks, posts, termExamples, terms } from "./schema";
 
 const fr = alias(explanations, "fr");
 const examplesEn = alias(termExamples, "examples_en");
@@ -15,8 +15,9 @@ const examplesFr = alias(termExamples, "examples_fr");
 
 /**
  * Every published post for the offline copy (14.2): text, French text, theme,
- * date, TOTW place, and each term with its explanations and examples in both
- * languages (whatever exists). Same joins as `getPostDetail()`, for all posts
+ * date, TOTW place, review colour (15.2), and each term with its explanations
+ * (with the definition highlights, 15.1) and examples in both languages
+ * (whatever exists). Same joins as `getPostDetail()`, for all posts
  * at once: two queries in one `db.batch`, one round trip.
  */
 export async function getOfflineCopy(): Promise<OfflineCopy> {
@@ -31,6 +32,8 @@ export async function getOfflineCopy(): Promise<OfflineCopy> {
         rank: postRanks.rank,
         totwNumber: postRanks.totwNumber,
         position: postRanks.totwPosition,
+        reviewColor: posts.reviewColor,
+        reviewChangedAt: posts.reviewChangedAt,
       })
       .from(postRanks)
       .innerJoin(posts, eq(posts.id, postRanks.postId))
@@ -72,6 +75,8 @@ export async function getOfflineCopy(): Promise<OfflineCopy> {
     rank: post.rank,
     totwNumber: post.totwNumber,
     position: post.position,
+    reviewColor: post.reviewColor,
+    reviewChangedAt: post.reviewChangedAt?.getTime() ?? null,
     terms: (termsByPost.get(post.id) ?? []).map((term) => ({
       id: term.id,
       position: term.position,
@@ -85,21 +90,4 @@ export async function getOfflineCopy(): Promise<OfflineCopy> {
   }));
 
   return { format: COPY_FORMAT, generatedAt: new Date().toISOString(), posts: copyPosts };
-}
-
-/** Only what the explanation shows: no ids, model or date on the device. */
-function content(row: Explanation | null): ExplanationContent | null {
-  if (!row) return null;
-  return {
-    language: row.language,
-    frEquivalents: row.frEquivalents,
-    definition: row.definition,
-    analogyTitle: row.analogyTitle,
-    analogyBody: row.analogyBody,
-    analogyEmoji: row.analogyEmoji,
-    exampleQuestion: row.exampleQuestion,
-    exampleQuestionFr: row.exampleQuestionFr,
-    inYourTextQuote: row.inYourTextQuote,
-    inYourTextExplanation: row.inYourTextExplanation,
-  };
 }

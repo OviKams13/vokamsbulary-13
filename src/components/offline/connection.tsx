@@ -12,6 +12,7 @@ import {
   useSyncExternalStore,
 } from "react";
 
+import { flushReviewChanges } from "@/lib/offline/review-sync";
 import { registerServiceWorker } from "@/lib/offline/service-worker";
 import { syncOfflineCopy } from "@/lib/offline/store";
 
@@ -27,7 +28,8 @@ import { syncOfflineCopy } from "@/lib/offline/store";
  * service worker (which stores the offline app itself, once per deployment),
  * and downloads the copy of the posts again when the app opens online, when
  * the connection comes back, when the app comes back to the screen and on
- * navigations (at most every 30 s for those two).
+ * navigations (at most every 30 s for those two). At each of those moments it
+ * first sends the review colours and highlights changed offline (Phase 15).
  */
 
 type Connection = {
@@ -97,9 +99,12 @@ export function ConnectionProvider({
 
   const refresh = useCallback((force: boolean) => {
     if (!navigator.onLine) return;
+    // Review changes made offline (Phase 15) are sent first, every time (a
+    // request only when some are waiting): the copy downloaded next has them.
+    const sent = flushReviewChanges();
     if (!force && Date.now() - lastRefresh.current < REFRESH_EVERY_MS) return;
     lastRefresh.current = Date.now();
-    void syncOfflineCopy();
+    void sent.then(() => syncOfflineCopy());
   }, []);
 
   // Opening the app: register the worker, then refresh the copy.

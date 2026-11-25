@@ -1,4 +1,5 @@
 import type { ExplanationContent } from "@/lib/explanation";
+import type { ReviewColor } from "@/lib/review";
 
 /**
  * The offline copy (14.2): every published post with what its pages show,
@@ -6,7 +7,11 @@ import type { ExplanationContent } from "@/lib/explanation";
  * screenshot (Blob images aren't needed offline), no draft, no cost data.
  *
  * Bump `COPY_FORMAT` when the shape changes: a copy in an older format is
- * ignored and replaced by the next download.
+ * ignored and replaced by the next download. Phase 15 only added optional
+ * fields, so it kept format 1: a copy saved before it still opens offline.
+ *
+ * The review colours and definition highlights changed on this device and
+ * not sent yet are applied to the saved copy too (`src/lib/offline/review-sync.ts`).
  */
 export const COPY_FORMAT = 1;
 
@@ -37,6 +42,12 @@ export type CopyPost = {
   rank: number;
   totwNumber: number;
   position: number;
+  /**
+   * Review colour (15.2) and when it was last changed (ms since 1970). Optional:
+   * a copy saved before Phase 15 has neither (empty circle).
+   */
+  reviewColor?: ReviewColor | null;
+  reviewChangedAt?: number | null;
   /** In `terms.position` order. */
   terms: CopyTerm[];
 };

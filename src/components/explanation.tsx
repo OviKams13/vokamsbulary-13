@@ -9,6 +9,12 @@ type ExplanationProps = {
   surface: string;
   /** The English row, or the French one after Translate (8.2). Null: none yet. */
   explanation: ExplanationRow | null;
+  /** The definition as shown, with the user's highlights (15.1); plain text without it. */
+  definition?: ReactNode;
+  /** Next to the "Definition" label: the highlight pencil (15.1). */
+  definitionAction?: ReactNode;
+  /** Under the definition: the highlight mode hint. */
+  definitionNote?: ReactNode;
 };
 
 /**
@@ -56,7 +62,13 @@ export function ExplanationHeader({
  * French translation is shown under it. Section labels stay in English, like
  * the rest of the interface.
  */
-export function Explanation({ surface, explanation }: ExplanationProps) {
+export function Explanation({
+  surface,
+  explanation,
+  definition,
+  definitionAction,
+  definitionNote,
+}: ExplanationProps) {
   if (!explanation) {
     return <p className="mt-4 text-fg-soft">No explanation for this word yet.</p>;
   }
@@ -67,10 +79,13 @@ export function Explanation({ surface, explanation }: ExplanationProps) {
 
   return (
     <>
-      <Section label="Definition">
-        <p lang={lang} className="leading-relaxed text-fg sm:text-[1.0625rem]">
-          {explanation.definition}
-        </p>
+      <Section label="Definition" action={definitionAction}>
+        {definition ?? (
+          <p lang={lang} className="leading-relaxed text-fg sm:text-[1.0625rem]">
+            {explanation.definition}
+          </p>
+        )}
+        {definitionNote}
       </Section>
 
       <div className="mt-7 rounded-2xl bg-surface-2 p-4 sm:flex sm:gap-4 sm:p-5">
@@ -131,12 +146,29 @@ export function Explanation({ surface, explanation }: ExplanationProps) {
   );
 }
 
-function Section({ label, children }: { label: string; children: ReactNode }) {
+function Section({
+  label,
+  action,
+  children,
+}: {
+  label: string;
+  /** A small button right after the label. */
+  action?: ReactNode;
+  children: ReactNode;
+}) {
+  const heading = (
+    <h3 className="text-xs font-semibold tracking-[0.12em] text-muted uppercase">{label}</h3>
+  );
   return (
     <section className="mt-7">
-      <h3 className="mb-2.5 text-xs font-semibold tracking-[0.12em] text-muted uppercase">
-        {label}
-      </h3>
+      {action ? (
+        <div className="mb-2.5 flex items-center gap-1.5">
+          {heading}
+          {action}
+        </div>
+      ) : (
+        <div className="mb-2.5">{heading}</div>
+      )}
       {children}
     </section>
   );

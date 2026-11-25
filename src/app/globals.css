@@ -32,6 +32,11 @@
 
   /* Post theme colors live in src/themes (one place for all 8 presets). */
 
+  /* Review colours of a post (15.2) */
+  --color-review-green: #3fb950;
+  --color-review-orange: #f0883e;
+  --color-review-red: #f85149;
+
   /* Radii */
   --radius-card: 1.75rem; /* themed post card (28px) */
   --radius-paper: 1.25rem; /* white text block inside a card, panels (20px) */
@@ -79,6 +84,37 @@
   padding: 0.05em 0.3em;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
+}
+
+/*
+ * The user's own highlights in a definition (15.1): the marker of the post
+ * text, with less side padding, so two words highlighted apart keep a visible
+ * gap until the space between them is highlighted too.
+ */
+.definition-mark {
+  padding-inline: 0.04em;
+}
+
+/*
+ * Highlight mode (15.1): a space that can be tapped (both of its words are
+ * highlighted) gets a larger touch area than its own width, above the edges of
+ * its words; larger again on a touch screen.
+ */
+.definition-space {
+  position: relative;
+}
+
+.definition-space[data-tappable]::before {
+  content: "";
+  position: absolute;
+  inset: -0.2em -0.2em;
+  z-index: 1;
+}
+
+@media (pointer: coarse) {
+  .definition-space[data-tappable]::before {
+    inset: -0.45em -0.45em;
+  }
 }
 
 /* No page scroll behind a modal dialog (mobile drawer, delete confirmation). */

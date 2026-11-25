@@ -3,18 +3,21 @@ import "server-only";
 import { and, asc, eq } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
+import { type ExplanationContent, toExplanationContent } from "@/lib/explanation";
+import type { ReviewColor } from "@/lib/review";
+
 import { db } from "./index";
-import { explanations, postRanks, posts, termExamples, terms, type Explanation } from "./schema";
+import { explanations, postRanks, posts, termExamples, terms } from "./schema";
 
 export type PostDetailTerm = {
   id: string;
   position: number;
   surface: string;
   headword: string;
-  /** English explanation (6.3); null if it doesn't exist (yet). */
-  explanation: Explanation | null;
+  /** English explanation (6.3) with its highlights (15.1); null if it doesn't exist (yet). */
+  explanation: ExplanationContent | null;
   /** French version (8.1), once Translate was clicked for this term; null before. */
-  french: Explanation | null;
+  french: ExplanationContent | null;
   /** The 5 usage examples (13.2); null for a post published before, until its examples view is opened. */
   examples: string[] | null;
   /** Their French translation, once the examples' Translate was clicked; null before. */
@@ -30,6 +33,10 @@ export type PostDetail = {
   totwNumber: number;
   /** 1–15 inside its TOTW. */
   position: number;
+  /** Review colour (15.2); null = empty circle. */
+  reviewColor: ReviewColor | null;
+  /** When it was last changed, in ms since 1970; null = never. */
+  reviewChangedAt: number | null;
   /** In `terms.position` order (the tab order, 6.2). */
   terms: PostDetailTerm[];
 };
@@ -62,6 +69,8 @@ export async function getPostDetail(id: string): Promise<PostDetail | null> {
         themeKey: posts.themeKey,
         totwNumber: postRanks.totwNumber,
         position: postRanks.totwPosition,
+        reviewColor: posts.reviewColor,
+        reviewChangedAt: posts.reviewChangedAt,
       })
       .from(postRanks)
       .innerJoin(posts, eq(posts.id, postRanks.postId))
@@ -98,6 +107,13 @@ export async function getPostDetail(id: string): Promise<PostDetail | null> {
     themeKey: post.themeKey ?? "",
     totwNumber: post.totwNumber,
     position: post.position,
-    terms: termRows,
+    reviewColor: post.reviewColor,
+    reviewChangedAt: post.reviewChangedAt?.getTime() ?? null,
+    // Only what the page shows: no ids, model or date in the page data.
+    terms: termRows.map((term) => ({
+      ...term,
+      explanation: toExplanationContent(term.explanation),
+      french: toExplanationContent(term.french),
+    })),
   };
 }
