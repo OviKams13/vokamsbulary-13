@@ -17,6 +17,7 @@ import { createPortal } from "react-dom";
 
 import { CloseIcon } from "@/components/icons";
 import { useAppRouter } from "@/components/offline/navigation";
+import { ReviewCircle } from "@/components/review/review-circle";
 import { TotwBadge } from "@/components/totw-badge";
 import { quickListFromCopy } from "@/lib/offline/derive";
 import { readCopy } from "@/lib/offline/store";
@@ -178,7 +179,8 @@ function QuickListBody({
           {Array.from({ length: TOTW_SIZE }, (_, index) => {
             const position = index + 1;
             const item = byPosition.get(position);
-            const rowClass = `flex items-center gap-2.5 rounded-xl border px-3 ${
+            // Left padding: room for the review circle (15.2), laid over the row.
+            const rowClass = `flex items-center gap-2.5 rounded-xl border pr-3 pl-10 ${
               sheet ? "h-[2.3125rem]" : "h-[2.1875rem]"
             }`;
             const number = (tone: string) => (
@@ -206,7 +208,16 @@ function QuickListBody({
 
             const active = activePosition === position;
             return (
-              <li key={position}>
+              <li key={position} className="relative">
+                {/* Beside the link, not in it: a tap on the circle doesn't open the post. */}
+                <ReviewCircle
+                  postId={item.postId}
+                  color={item.reviewColor}
+                  changedAt={item.reviewChangedAt}
+                  label={`TOTW ${totw.number} · #${position}`}
+                  size="sm"
+                  className="absolute top-1/2 left-1 z-10 -translate-y-1/2"
+                />
                 <Link
                   href={routes.post(item.postId)}
                   data-quick-position={position}
@@ -320,7 +331,8 @@ export function QuickListPopover({ totw, anchor, trigger, onClose }: PopoverProp
       if (!panel.current?.contains(target) && !trigger?.contains(target)) onClose();
     }
     function onKeyDown(event: globalThis.KeyboardEvent) {
-      if (event.key !== "Escape") return;
+      // Already handled inside (a review circle's choices close first).
+      if (event.key !== "Escape" || event.defaultPrevented) return;
       onClose();
       trigger?.focus();
     }

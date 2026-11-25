@@ -1,3 +1,6 @@
+// Relative path: drizzle-kit loads this file (through the schema) without the `@/` alias.
+import type { ReviewColor } from "./review";
+
 /**
  * Posts per Team of the Week. Lives here, not in the schema, so client
  * components can use it without pulling in drizzle. The `post_ranks` SQL
@@ -45,4 +48,8 @@ export type QuickListItem = {
   postId: string;
   /** The post's headwords, in term order, without repeats. */
   headwords: string[];
+  /** Review colour (15.2); null = empty circle. */
+  reviewColor: ReviewColor | null;
+  /** When it was last changed, in ms since 1970; null = never. */
+  reviewChangedAt: number | null;
 };
