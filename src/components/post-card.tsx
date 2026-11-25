@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { PostReview } from "@/components/review/post-review";
 import { TermChip } from "@/components/term-chip";
 import { ThemedPost } from "@/components/themed-post";
 import type { FeedPost } from "@/db/feed";
@@ -10,6 +11,10 @@ import { routes } from "@/lib/routes";
  * One post in the feed (5.2, mockups 01-D / 01-M): the themed post, then the
  * word chips and the publication date. The card opens the post detail page;
  * a chip searches for its word (10.2).
+ *
+ * The review colour chip (15.3) sits on the card but must not open the post,
+ * and a button can't go inside a link: the link is a transparent layer over
+ * the whole card, and the chip sits above that layer.
  */
 export function PostCard({ post, now }: { post: FeedPost; now: Date }) {
   const headwords = [...new Set(post.terms.map((term) => term.headword))];
@@ -17,19 +22,21 @@ export function PostCard({ post, now }: { post: FeedPost; now: Date }) {
 
   return (
     <article>
-      <Link
-        href={routes.post(post.id)}
-        aria-label={`TOTW ${post.totwNumber} · post ${post.position}: open the explanations`}
-        className="block rounded-[1.375rem] transition hover:brightness-[1.04] sm:rounded-card"
-      >
+      <div className="relative rounded-[1.375rem] transition has-[>a:hover]:brightness-[1.04] sm:rounded-card">
         <ThemedPost
           text={post.text}
           themeKey={post.themeKey}
           totwNumber={post.totwNumber}
           position={post.position}
           surfaces={post.terms.map((term) => term.surface)}
+          review={<PostReview post={post} />}
         />
-      </Link>
+        <Link
+          href={routes.post(post.id)}
+          aria-label={`TOTW ${post.totwNumber} · post ${post.position}: open the explanations`}
+          className="absolute inset-0 z-[1] rounded-[1.375rem] sm:rounded-card"
+        />
+      </div>
 
       <div className="mt-3 flex items-start gap-3 px-0.5 sm:mt-3.5 sm:px-1">
         <ul className="flex min-w-0 flex-1 flex-wrap gap-2">
