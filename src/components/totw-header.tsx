@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { TotwBadge } from "@/components/totw-badge";
 import { TOTW_SIZE as POSTS_PER_TOTW } from "@/lib/totw";
 
@@ -7,6 +9,8 @@ type TotwHeaderProps = {
   count: number;
   /** The current (last) TOTW gets the glow and the "Current" kicker. */
   current?: boolean;
+  /** Computer: the "▶ Reels" button, next to the x/15 count (16.3). */
+  reels?: ReactNode;
 };
 
 /**
@@ -15,7 +19,7 @@ type TotwHeaderProps = {
  * Mobile (01-M): compact — "Current team", count in the top-right corner,
  * the bar under the whole text block.
  */
-export function TotwHeader({ number, count, current = false }: TotwHeaderProps) {
+export function TotwHeader({ number, count, current = false, reels }: TotwHeaderProps) {
   const filled = Math.min(Math.max(count, 0), POSTS_PER_TOTW);
   const left = POSTS_PER_TOTW - filled;
   const total = <Count filled={filled} />;
@@ -67,6 +71,8 @@ export function TotwHeader({ number, count, current = false }: TotwHeaderProps) 
           ))}
         </div>
       </div>
+
+      {reels ? <div className="hidden shrink-0 self-center lg:block">{reels}</div> : null}
 
       <div className="hidden shrink-0 text-right sm:block">
         <p className="font-display text-4xl leading-none font-extrabold">{total}</p>

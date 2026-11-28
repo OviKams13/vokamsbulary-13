@@ -163,7 +163,7 @@ function ConnectionIndicator({ offline, copyMode }: { offline: boolean; copyMode
   if (!offline && !copyMode) return null;
 
   const className =
-    "fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] left-4 z-40 flex h-8 items-center gap-2 rounded-full border border-line-strong bg-surface-2/95 px-3 text-xs font-semibold text-fg-soft shadow-[0_6px_18px_rgb(0_0_0/0.45)] backdrop-blur lg:right-6 lg:left-auto";
+    "connection-pill fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] left-4 z-40 flex h-8 items-center gap-2 rounded-full border border-line-strong bg-surface-2/95 px-3 text-xs font-semibold text-fg-soft shadow-[0_6px_18px_rgb(0_0_0/0.45)] backdrop-blur lg:right-6 lg:left-auto";
 
   if (offline) {
     return (

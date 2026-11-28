@@ -1,4 +1,5 @@
 import { ConnectionProvider } from "@/components/offline/connection";
+import { ReelBackground } from "@/components/reels/reel-background";
 import { AppShell } from "@/components/shell/app-shell";
 import { getTotwOverview } from "@/db/totw";
 
@@ -18,6 +19,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   return (
     <ConnectionProvider>
       <AppShell overview={overview}>{children}</AppShell>
+      {/* 16.3: reels of new posts, prepared one by one while the app is open. */}
+      <ReelBackground />
     </ConnectionProvider>
   );
 }

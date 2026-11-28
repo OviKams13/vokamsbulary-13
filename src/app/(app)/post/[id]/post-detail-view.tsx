@@ -10,6 +10,7 @@ import { capitalize } from "@/lib/text";
 
 import { ExplanationPanel } from "./explanation-panel";
 import { PostMenu } from "./post-menu";
+import { PostReelButton } from "./post-reel-button";
 import { FrenchPostText, PostTranslationProvider } from "./post-translation";
 import { WordTabs } from "./word-tabs";
 
@@ -50,7 +51,8 @@ export function PostDetailView({
   const menu = <PostMenu postId={post.id} label={label} wordCount={post.terms.length} />;
 
   return (
-    <>
+    // The provider holds the word tab on screen: the ▶ starts the reels there (16.3).
+    <PostTranslationProvider initialTextFr={post.textFr} initialSelected={selected}>
       {/* Mobile header (02-M), in place of the feed's top bar. */}
       <header className="sticky top-0 z-30 flex h-15 items-center gap-2 border-b border-line bg-bg/95 px-4 backdrop-blur lg:hidden">
         <Link
@@ -61,7 +63,10 @@ export function PostDetailView({
           <ArrowLeftIcon size={22} />
         </Link>
         <h1 className="text-[1.0625rem] font-bold">Post</h1>
-        <p className="ml-auto font-display text-[0.9375rem] font-extrabold tracking-wide text-fg-soft">
+        <div className="mx-auto">
+          <PostReelButton postId={post.id} />
+        </div>
+        <p className="font-display text-[0.9375rem] font-extrabold tracking-wide text-fg-soft">
           {label}
         </p>
         <div className="-mr-2">{menu}</div>
@@ -77,46 +82,45 @@ export function PostDetailView({
             Back to TOTW {post.totwNumber}
           </Link>
           <h1 className="sr-only">{label}</h1>
+          <PostReelButton postId={post.id} />
           {menu}
         </div>
 
-        <PostTranslationProvider initialTextFr={post.textFr} initialSelected={selected}>
-          <ThemedPost
-            text={post.text}
-            themeKey={post.themeKey}
-            totwNumber={post.totwNumber}
-            position={post.position}
-            surfaces={post.terms.map((term) => term.surface)}
-            translation={<FrenchPostText />}
-            // Review colour on the card (15.3): set it right after reading.
-            review={<PostReview post={post} />}
-          />
+        <ThemedPost
+          text={post.text}
+          themeKey={post.themeKey}
+          totwNumber={post.totwNumber}
+          position={post.position}
+          surfaces={post.terms.map((term) => term.surface)}
+          translation={<FrenchPostText />}
+          // Review colour on the card (15.3): set it right after reading.
+          review={<PostReview post={post} />}
+        />
 
-          {post.terms.length > 0 ? (
-            <div className="mt-5 sm:mt-6">
-              <WordTabs
-                key={post.id}
-                labels={post.terms.map((term) => capitalize(term.headword))}
-                panels={post.terms.map((term) => (
-                  <ExplanationPanel
-                    key={term.position}
-                    termId={term.id}
-                    position={term.position}
-                    headword={term.headword}
-                    surface={term.surface}
-                    english={term.explanation}
-                    french={term.french}
-                    examples={term.examples}
-                    examplesFr={term.examplesFr}
-                  />
-                ))}
-                initial={selected}
-              />
-            </div>
-          ) : null}
-        </PostTranslationProvider>
+        {post.terms.length > 0 ? (
+          <div className="mt-5 sm:mt-6">
+            <WordTabs
+              key={post.id}
+              labels={post.terms.map((term) => capitalize(term.headword))}
+              panels={post.terms.map((term) => (
+                <ExplanationPanel
+                  key={term.position}
+                  termId={term.id}
+                  position={term.position}
+                  headword={term.headword}
+                  surface={term.surface}
+                  english={term.explanation}
+                  french={term.french}
+                  examples={term.examples}
+                  examplesFr={term.examplesFr}
+                />
+              ))}
+              initial={selected}
+            />
+          </div>
+        ) : null}
       </main>
-    </>
+    </PostTranslationProvider>
   );
 }
 
