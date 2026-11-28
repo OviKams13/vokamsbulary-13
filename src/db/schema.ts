@@ -12,6 +12,7 @@ import {
   check,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   pgView,
@@ -23,6 +24,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 // Relative path: drizzle-kit loads this file without the `@/` alias.
+import type { ReelScreen, ReelSvgs } from "../lib/reels/script";
 import { REVIEW_COLORS } from "../lib/review";
 
 // ---------------------------------------------------------------------------
@@ -39,7 +41,20 @@ export const postStatus = pgEnum("post_status", [
 
 export const explanationLanguage = pgEnum("explanation_language", ["en", "fr"]);
 
-export const aiCallKind = pgEnum("ai_call_kind", ["extract", "explain", "translate", "examples"]);
+export const aiCallKind = pgEnum("ai_call_kind", [
+  "extract",
+  "explain",
+  "translate",
+  "examples",
+  "reel",
+]);
+
+/**
+ * Life cycle of a reel (16.1): `pending` while it is being prepared (its
+ * drawings may already be stored), `ready` once its audio and timings are
+ * stored, `failed` after an error (the next preparation tries again).
+ */
+export const reelStatus = pgEnum("reel_status", ["pending", "ready", "failed"]);
 
 /**
  * Review colour of a post (15.2): green = understood every word, orange =
@@ -226,6 +241,82 @@ export const aiCalls = pgTable(
   ],
 );
 
+/**
+ * The reel of one term (16.1): a narrated, bilingual slideshow. The texts on
+ * screen are read live from the post, the explanations and the examples; the
+ * reel only holds what was made for it: the drawings, the outro line, the
+ * single MP3 (all lines joined, in Vercel Blob) and the timing of each line.
+ */
+export const reels = pgTable(
+  "reels",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    termId: uuid("term_id")
+      .notNull()
+      .unique("reels_term_id_key")
+      .references(() => terms.id, { onDelete: "cascade" }),
+    /** The term's post: deleting the post finds the reels' Blob files with it. */
+    postId: uuid("post_id")
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    status: reelStatus("status").notNull().default("pending"),
+    /** One checked SVG per illustrated screen (null: rejected, drawn empty). Set by step 2. */
+    svgs: jsonb("svgs").$type<ReelSvgs>(),
+    /** The outro's short English line, written with the drawings. */
+    gist: text("gist"),
+    /** Model that drew the SVGs. */
+    model: text("model"),
+    /** Screens and lines with their timings (ms at 1×). Set when the reel is ready. */
+    screens: jsonb("screens").$type<ReelScreen[]>(),
+    /** Public Blob URL of the reel's single MP3, and its key (to delete it). */
+    audioUrl: text("audio_url"),
+    audioPathname: text("audio_pathname"),
+    /** Voices used (Chirp 3 HD, or Neural2 for the whole reel when Chirp failed). */
+    voiceEn: text("voice_en"),
+    voiceFr: text("voice_fr"),
+    /** Characters sent to Google Text-to-Speech for this reel. */
+    ttsChars: integer("tts_chars"),
+    /** Length of the reel at 1× (sum of the steps). */
+    totalMs: integer("total_ms"),
+    /** A preparation in progress holds the reel until then (two runs never build one reel). */
+    lockedUntil: timestamp("locked_until", { withTimezone: true }),
+    lastError: text("last_error"),
+    createdAt: createdAt(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check(
+      "reels_ready_is_complete",
+      sql`${t.status} <> 'ready' OR (${t.screens} IS NOT NULL AND ${t.audioUrl} IS NOT NULL AND ${t.audioPathname} IS NOT NULL AND ${t.svgs} IS NOT NULL)`,
+    ),
+    index("reels_post_id_idx").on(t.postId),
+  ],
+);
+
+/**
+ * A log of every reel voice-over (16.1), like `ai_calls` for Claude: the
+ * characters sent to Google Text-to-Speech, to watch the free tier (1M
+ * characters a month). SET NULL keeps the history after a post is deleted.
+ */
+export const ttsCalls = pgTable(
+  "tts_calls",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    postId: uuid("post_id").references(() => posts.id, { onDelete: "set null" }),
+    termId: uuid("term_id").references(() => terms.id, { onDelete: "set null" }),
+    voiceEn: text("voice_en").notNull(),
+    voiceFr: text("voice_fr").notNull(),
+    /** Characters of the lines that were synthesized (billed), failed lines excluded. */
+    characters: integer("characters").notNull(),
+    lines: smallint("lines").notNull(),
+    durationMs: integer("duration_ms"),
+    success: boolean("success").notNull(),
+    error: text("error"),
+    createdAt: createdAt(),
+  },
+  (t) => [index("tts_calls_created_at_idx").on(t.createdAt)],
+);
+
 // ---------------------------------------------------------------------------
 // Derived data (ERD §5.1): TOTW number and position of every published post
 // ---------------------------------------------------------------------------
@@ -261,3 +352,4 @@ export type NewExplanation = typeof explanations.$inferInsert;
 export type TermExamples = typeof termExamples.$inferSelect;
 export type AiCall = typeof aiCalls.$inferSelect;
 export type NewAiCall = typeof aiCalls.$inferInsert;
+export type Reel = typeof reels.$inferSelect;

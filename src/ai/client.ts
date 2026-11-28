@@ -41,6 +41,11 @@ export type CallClaudeOptions<Schema extends z.ZodType> = {
   messages: Anthropic.Beta.BetaMessageParam[];
   /** Thinking depth and token spend. The model's default is `high`. */
   effort?: Effort;
+  /**
+   * For a long answer (the reel drawings, 16.1): its own timeout and retries
+   * instead of the client's 120 s + 1 retry. Must stay under the route's limit.
+   */
+  request?: { timeoutMs: number; maxRetries: number };
 };
 
 /** A validated answer and the model that actually produced it (a fallback may have answered). */
@@ -68,18 +73,23 @@ export async function callClaude<Schema extends z.ZodType>(
   try {
     // `create` (not `parse`) so usage and stop_reason are read before the JSON:
     // a cut-off answer is still logged with the tokens it cost.
-    const response = await anthropic.beta.messages.create({
-      model: CLAUDE_MODEL,
-      max_tokens: options.maxTokens,
-      ...(options.system ? { system: options.system } : {}),
-      messages: options.messages,
-      output_config: {
-        format: betaZodOutputFormat(options.schema),
-        ...(options.effort ? { effort: options.effort } : {}),
+    const response = await anthropic.beta.messages.create(
+      {
+        model: CLAUDE_MODEL,
+        max_tokens: options.maxTokens,
+        ...(options.system ? { system: options.system } : {}),
+        messages: options.messages,
+        output_config: {
+          format: betaZodOutputFormat(options.schema),
+          ...(options.effort ? { effort: options.effort } : {}),
+        },
+        betas: [FALLBACK_BETA],
+        fallbacks: "default",
       },
-      betas: [FALLBACK_BETA],
-      fallbacks: "default",
-    });
+      options.request
+        ? { timeout: options.request.timeoutMs, maxRetries: options.request.maxRetries }
+        : undefined,
+    );
 
     model = response.model;
     inputTokens = response.usage.input_tokens;

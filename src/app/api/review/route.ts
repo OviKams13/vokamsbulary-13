@@ -4,6 +4,7 @@ import { isPostId } from "@/db/post-detail";
 import { saveReviewChange } from "@/db/review";
 import { hasAccess } from "@/lib/access";
 import { REVIEW_COLORS, type ReviewChange } from "@/lib/review";
+import { isSameOrigin } from "@/lib/same-origin";
 
 /** Changes per request: the device sends its whole queue at once. */
 const MAX_CHANGES = 200;
@@ -75,16 +76,5 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Review save failed:", error instanceof Error ? error.message : error);
     return Response.json({ error: "Couldn't save." }, { status: 500 });
-  }
-}
-
-function isSameOrigin(request: Request): boolean {
-  const origin = request.headers.get("origin");
-  if (!origin) return true; // Same-origin fetches may omit it; the cookie rule still applies.
-  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
-  try {
-    return new URL(origin).host === host;
-  } catch {
-    return false;
   }
 }
