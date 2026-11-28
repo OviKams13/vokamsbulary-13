@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 
+import { prepareReelsOfPost } from "@/ai/prepare-reel";
 import { runExplanation } from "@/ai/run-explanation";
 import { findAlreadySeen, type SeenIn } from "@/db/already-seen";
 import { isPostId } from "@/db/post-detail";
@@ -48,6 +49,10 @@ export async function publishAction(postId: string): Promise<{ message: string }
           : "The explanations aren't ready yet. Try Explain & publish again.",
     };
   }
+  // 16.3: the reels are prepared in the background, never blocking the publish:
+  // as many words as fit in this run (at least the first one), the rest later.
+  const startedAt = performance.now();
+  after(() => prepareReelsOfPost(postId, startedAt));
   // The sidebar's TOTW counts live in the shared layout, which a redirect alone
   // doesn't re-render: purge the client cache so they show the new post.
   revalidatePath("/", "layout");

@@ -48,3 +48,4 @@ jobs:
           ACCESS_CODE: ci-placeholder
           ACCESS_COOKIE_SECRET: ci-placeholder-ci-placeholder-ci-placeholder
           BLOB_READ_WRITE_TOKEN: ci-placeholder
+          GOOGLE_TTS_API_KEY: ci-placeholder

@@ -16,6 +16,7 @@ import { z } from "zod";
  * - BLOB_STORE_ID (Vercel Production, OIDC) or BLOB_READ_WRITE_TOKEN (local,
  *   Preview): at least one → 6.4 (deleting a post's screenshot, the first Blob
  *   call). `@vercel/blob` reads them itself; this only checks one is there.
+ * - GOOGLE_TTS_API_KEY     → 16.1 (reel voices, Google Cloud Text-to-Speech)
  *
  * DATABASE_URL_UNPOOLED is only read by drizzle-kit (`drizzle.config.ts`), never
  * by the running app, so it is not part of this schema.
@@ -36,6 +37,8 @@ const serverSchema = z
     BLOB_STORE_ID: z.string().min(1).optional(),
     /** Dev Blob store token (local and Preview). */
     BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
+    /** Google Cloud Text-to-Speech key (16.1, reel voices). Sent in a header, never logged. */
+    GOOGLE_TTS_API_KEY: z.string().min(1),
   })
   .refine((vars) => Boolean(vars.BLOB_STORE_ID || vars.BLOB_READ_WRITE_TOKEN), {
     path: ["BLOB_STORE_ID | BLOB_READ_WRITE_TOKEN"],
