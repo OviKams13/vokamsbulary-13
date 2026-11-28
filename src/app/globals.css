@@ -215,3 +215,110 @@ dialog.sheet[open]::backdrop {
     animation-duration: 2.5s;
   }
 }
+
+/*
+ * Reel player (16.2). Every animation lasts its time divided by the speed
+ * (`--reel-speed` on the player) and stops while the reel is paused. The
+ * drawing and the text appear, then the yellow marker sweeps over the marked
+ * words (post text, the word, the user's definition highlights, examples).
+ * Their total stays under the screen's animation time (`animationMs()`).
+ */
+.reel-in {
+  animation: reel-in calc(450ms / var(--reel-speed, 1)) ease-out both;
+}
+
+.reel-in-late {
+  animation: reel-in calc(450ms / var(--reel-speed, 1)) ease-out calc(700ms / var(--reel-speed, 1))
+    both;
+}
+
+.reel-pop {
+  animation: reel-pop calc(420ms / var(--reel-speed, 1)) cubic-bezier(0.3, 1.5, 0.6, 1)
+    calc(150ms / var(--reel-speed, 1)) both;
+}
+
+.reel-stage .marker {
+  background-color: transparent;
+  background-image: linear-gradient(var(--color-marker), var(--color-marker));
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  animation: reel-sweep calc(520ms / var(--reel-speed, 1)) ease-out
+    calc(450ms / var(--reel-speed, 1)) forwards;
+}
+
+.reel-paused .reel-stage *,
+.reel-paused .reel-stage {
+  animation-play-state: paused !important;
+}
+
+/* A new reel slides in from where the finger sent it. */
+.reel-enter-up {
+  animation: reel-enter-up 320ms ease-out both;
+}
+
+.reel-enter-down {
+  animation: reel-enter-down 320ms ease-out both;
+}
+
+@keyframes reel-in {
+  from {
+    opacity: 0;
+    transform: translateY(1.2cqh);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes reel-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes reel-sweep {
+  to {
+    background-size: 100% 100%;
+  }
+}
+
+@keyframes reel-enter-up {
+  from {
+    transform: translateY(18%);
+    opacity: 0.4;
+  }
+}
+
+@keyframes reel-enter-down {
+  from {
+    transform: translateY(-18%);
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reel-in,
+  .reel-in-late,
+  .reel-pop,
+  .reel-enter-up,
+  .reel-enter-down {
+    animation: none;
+  }
+  .reel-stage .marker {
+    animation: none;
+    background-size: 100% 100%;
+  }
+}
+
+/* Phone feed (16.3): the "Offline" pill sits just above the gold ▶ of the reels. */
+@media (width < 64rem) {
+  body:has([data-reel-fab]) .connection-pill {
+    bottom: calc(5.25rem + env(safe-area-inset-bottom));
+  }
+}
